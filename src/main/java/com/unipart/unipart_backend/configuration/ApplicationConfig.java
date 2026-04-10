@@ -35,6 +35,31 @@ public class ApplicationConfig {
                userRepository.save(user);
                log.warn(user.getUsername());
             };
+            if(userRepository.findByUsername("student").isEmpty()){
+                var role = new Role();
+                role.setName("STUDENT");
+                User user = User.builder()
+                        .username("student")
+                        .passwordHash(passwordEncoder.encode("Student123"))
+                        .role(role)
+                        .build();
+
+                userRepository.save(user);
+                log.warn(user.getUsername());
+            };
+            if(userRepository.findByUsername("employer").isEmpty()){
+                var role = new Role();
+                role.setName("EMPLOYER");
+                User user = User.builder()
+                        .username("employer")
+                        .passwordHash(passwordEncoder.encode("Employer123"))
+                        .role(role)
+                        .build();
+
+                userRepository.save(user);
+                log.warn(user.getUsername());
+            };
         };
     }
+
 }

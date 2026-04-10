@@ -45,7 +45,7 @@ public class UserServiceImpl {
     }
     public UserResponse updateStudentUser(String id, UserUpdateRequest request) {
 
-        User u = userRepository.findById(id);
+        User u = userRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXIST));
         userMapper.updateUser(u,request);
 
         return userMapper.toUserResponse(userRepository.save(u));
@@ -57,7 +57,7 @@ public class UserServiceImpl {
     }
     @PreAuthorize("returnObject.username == authentication.name")
     public UserResponse findUser(String id){
-        User u = userRepository.findById(id);
+        User u = userRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXIST));
         return userMapper.toUserResponse(u);
     }
 

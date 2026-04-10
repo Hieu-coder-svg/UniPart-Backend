@@ -1,6 +1,5 @@
 package com.unipart.unipart_backend.dto.response;
 
-import com.unipart.unipart_backend.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +19,7 @@ public class UserResponse {
     private String fullName;
     private String address;
     private String phoneNumber;
-    private Gender gender;
+    private String gender;
     private Boolean isBlocked;
     private String roleName;
     private Integer availableHours;

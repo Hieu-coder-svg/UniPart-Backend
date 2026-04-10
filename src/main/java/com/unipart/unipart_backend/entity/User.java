@@ -1,7 +1,6 @@
 package com.unipart.unipart_backend.entity;
 
 
-import com.unipart.unipart_backend.enums.Gender;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -50,7 +49,7 @@ public class User {
     private String phoneNumber;
     @Enumerated(EnumType.STRING)
     @Column(name = "gender", length = 10)
-    private Gender gender;
+    private String gender;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
@@ -61,9 +60,6 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
-    @Column(name = "available_hours")
-    private int availableHours;
 
     @Column(name = "location_latitude", precision = 10, scale = 8)
     private double locationLatitude;
