@@ -1,4 +1,4 @@
-package com.unipart.unipart_backend.dto.request;
+package com.unipart.unipart_backend.entity;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OTPRequest {
+public class Otp {
     int otp;
     String email;
     LocalDateTime expirationTime;

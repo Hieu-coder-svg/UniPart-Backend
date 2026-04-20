@@ -1,14 +1,15 @@
 package com.unipart.unipart_backend.entity;
 
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,57 +20,61 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-@AllArgsConstructor
-@NoArgsConstructor
+@Entity
+@Table(name = "users")
 @Getter
 @Setter
-@Entity
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@Table(name = "users")
 public class User {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", length = 50, nullable = false)
     private String id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(name = "username", length = 50, nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "email", length = 100, nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", length = 255, nullable = false)
     private String passwordHash;
 
     @Column(name = "full_name", length = 100)
     private String fullName;
 
-    @Column(length = 255,name = "address")
-    private String address;
-    @Column(length = 10,name = "phone_number")
-    private String phoneNumber;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "gender", length = 10)
-    private String gender;
-
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Column(name = "is_blocked", nullable = false)
-    private boolean isBlocked;
+    @Column(name = "phone_number", length = 10)
+    private String phoneNumber;
 
-    @ManyToOne
+    @Column(name = "gender", length = 10) // String theo yêu cầu của bạn
+    private String gender;
+
+    @Column(name = "is_blocked")
+    private Boolean isBlocked;
+
+    @Column(name = "is_actived")
+    private Boolean isActived;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
-
-    @Column(name = "location_latitude", precision = 10, scale = 8)
-    private double locationLatitude;
-
-    @Column(name = "location_longitude", precision = 11, scale = 8)
-    private double locationLongitude;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Quan hệ 1-1 với Student và Employer (shared primary key)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Student student;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Employer employer;
 }

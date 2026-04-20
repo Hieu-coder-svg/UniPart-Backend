@@ -1,5 +1,4 @@
 package com.unipart.unipart_backend.entity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,35 +14,38 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "job_time_slots")
+@Table(name = "comments")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobTimeSlot {
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "job_id", nullable = false)
-    private Long jobId;
+    @Column(name = "post_id", nullable = false)
+    private Long postId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", insertable = false, updatable = false)
-    private Job job;
+    @JoinColumn(name = "post_id", insertable = false, updatable = false)
+    private Post post;
 
-    @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;
+    @Column(name = "user_id", length = 50, nullable = false)
+    private String userId;
 
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private Student student;
 
-    @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
+    private String content;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }

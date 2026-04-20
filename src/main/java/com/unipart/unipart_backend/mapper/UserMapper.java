@@ -7,10 +7,12 @@ import com.unipart.unipart_backend.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     User toUser(StudentRegistrationRequest request);
     UserResponse toUserResponse(User user);
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
-
+    List<UserResponse> toUserResponseList(List<User> users);
 }

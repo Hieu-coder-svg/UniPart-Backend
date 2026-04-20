@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class OTPRequest {
+public class SendOTPRequest {
     private String email;
     private String otp;
 }

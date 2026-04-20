@@ -10,27 +10,27 @@ import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.JobMapper;
 import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.JobService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal=true)
-public class JobServiceImpl {
+@Service
+public class JobServiceImpl implements JobService {
     JobRepository jobRepository;
     JobMapper jobMapper;
     UserRepository userRepository;
     @PreAuthorize("hasRole('EMPLOYER')")
     public JobResponse createJob(JobCreationRequest job) {
         Job j =  jobMapper.toJob(job);
-        j.setHide(false);
+        j.setIsHide(false);
         Job savedJob = jobRepository.save(j);
         return jobMapper.toJobResponse(savedJob);
     }
@@ -50,6 +50,12 @@ public class JobServiceImpl {
         List<Job> jobs =  jobRepository.findAllByEmployerId(u.getId());
         return jobMapper.toJobResponseList(jobs);
     }
+
+    @Override
+    public JobResponse getJobDetails(Long id) {
+        return null;
+    }
+
     public JobResponse getJob(Long id) {
         Job job = jobRepository.findById(id).orElseThrow();
         return jobMapper.toJobResponse(job);

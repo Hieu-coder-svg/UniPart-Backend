@@ -8,11 +8,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
 public interface JobService  {
-    public JobResponse createJob(JobCreationRequest job);
-    public JobResponse updateJob(long job , JobUpdateRequest request);
-    public List<JobResponse> getMyJob(Long id);
-    public JobResponse getJobDetails(Long id);
-    public List<Job> getAll();
+     JobResponse createJob(JobCreationRequest job);
+     JobResponse updateJob(long job , JobUpdateRequest request);
+     List<JobResponse> getMyJob(Long id);
+     JobResponse getJobDetails(Long id);
+     List<Job> getAll();
 }

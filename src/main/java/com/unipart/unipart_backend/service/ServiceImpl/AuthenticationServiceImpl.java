@@ -22,6 +22,7 @@ import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.repository.InvalidatedTokenRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.AuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.security.DrbgParameters;
 import java.text.ParseException;
@@ -37,11 +39,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
-
+@Service
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal=true)
-public class AuthenticationServiceImpl {
+public class AuthenticationServiceImpl implements AuthenticationService {
 
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;

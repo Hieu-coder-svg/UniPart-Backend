@@ -1,5 +1,4 @@
 package com.unipart.unipart_backend.entity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,35 +14,35 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "job_time_slots")
+@Table(name = "saved_job")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobTimeSlot {
+public class SavedJob {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "job_id", nullable = false)
+    @Column(name = "student_id", length = 50)
+    private String studentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private Student student;
+
+    @Column(name = "job_id")
     private Long jobId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", insertable = false, updatable = false)
     private Job job;
 
-    @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;
-
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
-
-    @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
+    @Column(name = "saved_at")
+    private LocalDateTime savedAt;
 }

@@ -9,24 +9,22 @@ import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.UserMapper;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal=true)
-public class UserServiceImpl {
+@Service
+public class UserServiceImpl implements UserService {
 
     UserRepository userRepository;
     UserMapper userMapper;
@@ -51,9 +49,9 @@ public class UserServiceImpl {
         return userMapper.toUserResponse(userRepository.save(u));
     }
     @PreAuthorize("hasRole('ADMIN')")
-    public List<User> getAll(){
+    public List<UserResponse> getAll(){
 
-        return userRepository.findAll();
+        return userMapper.toUserResponseList(userRepository.findAll());
     }
     @PreAuthorize("returnObject.username == authentication.name")
     public UserResponse findUser(String id){

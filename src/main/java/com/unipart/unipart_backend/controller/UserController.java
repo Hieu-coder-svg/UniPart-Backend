@@ -36,12 +36,12 @@ public class UserController {
                 .result(userService.getAll())
                 .build() ;
     }
-    @PutMapping("/{id}")
-    ApiResponse<UserResponse> updateUser(@PathVariable String id,@RequestBody StudentRegistrationRequest user){
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(userService.updateStudentUser(id, user));
-        return apiResponse;
-    }
+//    @PutMapping("/{id}")
+//    ApiResponse<UserResponse> updateUser(@PathVariable String id,@RequestBody StudentRegistrationRequest user){
+//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
+//        apiResponse.setResult(userService.updateStudentUser(id, user));
+//        return apiResponse;
+//    }
     @GetMapping("/{id}")
     ApiResponse<UserResponse> getUserId(@PathVariable String id){
 

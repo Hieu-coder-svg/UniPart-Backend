@@ -2,6 +2,7 @@ package com.unipart.unipart_backend.configuration;
 
 import com.unipart.unipart_backend.entity.Role;
 import com.unipart.unipart_backend.entity.User;
+import com.unipart.unipart_backend.repository.RoleRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Slf4j
 public class ApplicationConfig {
     private PasswordEncoder passwordEncoder;
+    private RoleRepository roleRepository;
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return application -> {
             if(userRepository.findByUsername("admin").isEmpty()){
-                var role = new Role();
-                role.setName("ADMIN");
-               User user = User.builder()
+                var role = roleRepository.findById(1).orElseThrow();
+                User user = User.builder()
                        .username("admin")
                        .passwordHash(passwordEncoder.encode("Admin123"))
                        .role(role)
@@ -36,24 +37,22 @@ public class ApplicationConfig {
                log.warn(user.getUsername());
             };
             if(userRepository.findByUsername("student").isEmpty()){
-                var role = new Role();
-                role.setName("STUDENT");
+                var roles = roleRepository.findById(2).orElseThrow();
                 User user = User.builder()
                         .username("student")
                         .passwordHash(passwordEncoder.encode("Student123"))
-                        .role(role)
+                        .role(roles)
                         .build();
 
                 userRepository.save(user);
                 log.warn(user.getUsername());
             };
             if(userRepository.findByUsername("employer").isEmpty()){
-                var role = new Role();
-                role.setName("EMPLOYER");
+                var rolee = roleRepository.findById(3).orElseThrow();
                 User user = User.builder()
                         .username("employer")
                         .passwordHash(passwordEncoder.encode("Employer123"))
-                        .role(role)
+                        .role(rolee)
                         .build();
 
                 userRepository.save(user);

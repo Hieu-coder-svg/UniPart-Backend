@@ -1,7 +1,8 @@
 package com.unipart.unipart_backend.entity;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,21 +16,27 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "job_time_slots")
+@Table(name = "applications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobTimeSlot {
+public class Application {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "student_id", length = 50, nullable = false)
+    private String studentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", insertable = false, updatable = false)
+    private Student student;
 
     @Column(name = "job_id", nullable = false)
     private Long jobId;
@@ -38,12 +45,13 @@ public class JobTimeSlot {
     @JoinColumn(name = "job_id", insertable = false, updatable = false)
     private Job job;
 
-    @Column(name = "work_date", nullable = false)
-    private LocalDate workDate;
 
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
+    @Column(name = "status", length = 20, nullable = false)
+    private String status;
 
-    @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
+    @Column(name = "applied_at", updatable = false)
+    private LocalDateTime appliedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 }

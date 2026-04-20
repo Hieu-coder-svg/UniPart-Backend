@@ -10,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -22,7 +24,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "jobs")
@@ -35,46 +39,57 @@ public class Job {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Column(name = "employer_id", nullable = false, length = 50)
-    private String employerId;   // Nếu bạn đã có entity User thì đổi thành @ManyToOne User employer
+    @Column(name = "employer_id", length = 50, nullable = false)
+    private String employerId;
 
-    @Column(nullable = false, length = 100)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employer_id", insertable = false, updatable = false)
+    private Employer employer;
+
+    @Column(name = "title", length = 100, nullable = false)
     private String title;
 
-    @Column(length = 255)
-    private String image;   // URL ảnh job
+    @Column(name = "image", length = 255)
+    private String image;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "working_shift", length = 100)
+    private String workingShift;
+
+    @Column(name = "vacancies", nullable = false)
     private Integer vacancies;
 
-    @Column(nullable = false)
+    @Column(name = "urgent")
     private Boolean urgent;
-    @Column(length = 255,name = "address")
+
+    @Column(name = "address", length = 255)
     private String address;
+
     @Column(name = "location_latitude", precision = 10, scale = 8)
     private BigDecimal locationLatitude;
 
     @Column(name = "location_longitude", precision = 11, scale = 8)
     private BigDecimal locationLongitude;
 
-    @Column(precision = 10, scale = 2)
+    @Column(name = "salary", precision = 10, scale = 2)
     private BigDecimal salary;
 
-    @Column(nullable = false)
-    private boolean isHide ;
+    @Column(name = "isHide")
+    private Boolean isHide;
 
-    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // Quan hệ 1 Job - N JobTimeSlot
-    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<JobTimeSlot> timeSlots = new ArrayList<>();
+    @Column(name = "expired_at")
+    private LocalDateTime expiredAt;
 
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<JobTimeSlot> jobTimeSlots = new HashSet<>();
 
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Application> applications = new HashSet<>();
 }
