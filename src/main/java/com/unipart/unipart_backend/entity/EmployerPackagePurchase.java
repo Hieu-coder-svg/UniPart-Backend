@@ -1,4 +1,5 @@
 package com.unipart.unipart_backend.entity;
+import com.unipart.unipart_backend.enums.PaymentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -58,4 +59,10 @@ public class EmployerPackagePurchase {
 
     @Column(name = "tins_purchased")
     private Integer tinsPurchased;
+
+    @Column(name = "payment_status", length = 20)
+    private PaymentStatus paymentStatus;
+
+    @Column(name = "transaction_ref", length = 100)
+    private String transactionRef;
 }
