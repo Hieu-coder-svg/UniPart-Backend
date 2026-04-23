@@ -1,31 +1,39 @@
 package com.unipart.unipart_backend.dto.response;
 
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class StudentResponse {
+public class EmployerResponse {
 
-    // ===== USER =====
-    Long id;
-    String username;
-    String email;
-    String fullName;
-    String phoneNumber;
-    String gender;
-    LocalDate dateOfBirth;
+    // Thông tin cơ bản từ thực thể User
+    private String id;
+    private String username;
+    private String email;
+    private String fullName;
+    private LocalDate dateOfBirth;
+    private String phoneNumber;
+    private String gender;
+    private Boolean isBlocked;
+    private Boolean isActived;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
-    // ===== STUDENT =====
-    String university;
-    String major;
-    String address;
-    Double latitude;
-    Double longitude;
-    Double rating;
+    // Thông tin chi tiết từ thực thể Employer
+    private String companyName;
+    private String companyAddress;
+    private Double latitude;
+    private Double longitude;
+    private String description;
+    private Double rating;
 }

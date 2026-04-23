@@ -1,6 +1,5 @@
 package com.unipart.unipart_backend.dto.request;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -11,16 +10,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class SendOTPRequest {
+public class VerifyOTPRequest {
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
     private String email;
 
+    @NotBlank(message = "OTP không được để trống")
+    @Size(min = 6, max = 6, message = "OTP phải gồm 6 chữ số")
+    private String otp;
 }

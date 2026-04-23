@@ -5,27 +5,29 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class JobUpdateRequest {
+public class JobFilterRequest {
+    private String employerId;
     private String title;
-    private String image;
-    private String description;
     private String workingShift;
-    private Integer vacancies;
     private Boolean urgent;
     private String address;
-    private BigDecimal locationLatitude;
-    private BigDecimal locationLongitude;
-    private BigDecimal salary;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private LocalDateTime createdAfter;
+    private LocalDateTime expiresBefore;
     private Boolean isHide;
-    private LocalDateTime expiredAt;
-    private List<JobTimeSlotRequest> timeSlots;
+
+    private int page = 0;
+    private int size = 10;
+    private String sortBy = "createdAt";
+    private Sort.Direction sortDirection = Sort.Direction.DESC;
 }

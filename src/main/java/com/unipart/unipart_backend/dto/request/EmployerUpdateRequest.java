@@ -1,34 +1,26 @@
 package com.unipart.unipart_backend.dto.request;
 
-
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class StudentUpdateRequest {
-
-    private String username;
-    private String email;
-    private String password;
+ public class EmployerUpdateRequest {
     private String fullName;
+    private LocalDate dateOfBirth;
     private String phoneNumber;
     private String gender;
-    private LocalDate dateOfBirth;
 
-    private String university;
-    private String major;
-    private String address;
+    private String companyName;
+    private String companyAddress;
     private Double latitude;
     private Double longitude;
+    private String description;
 }

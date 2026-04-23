@@ -1,12 +1,17 @@
 package com.unipart.unipart_backend.dto.request;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-@Data
-@Builder
+import lombok.Setter;
+
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SavedJobRequest {
-    private Long jobId;
+@Builder
+public class ApplyJobUpdateRequest {
+    private Long applicationId;
+    private String status;
 }

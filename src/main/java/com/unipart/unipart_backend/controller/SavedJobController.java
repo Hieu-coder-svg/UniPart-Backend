@@ -1,56 +1,50 @@
 package com.unipart.unipart_backend.controller;
 
-import com.unipart.unipart_backend.dto.request.JobCreationRequest;
-import com.unipart.unipart_backend.dto.request.JobUpdateRequest;
+import com.unipart.unipart_backend.dto.request.SavedJobRequest;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
-import com.unipart.unipart_backend.dto.response.JobResponse;
-import com.unipart.unipart_backend.entity.Job;
-import com.unipart.unipart_backend.service.JobService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.unipart.unipart_backend.dto.response.SavedJobResponse;
+import com.unipart.unipart_backend.service.SavedJobService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
-@RequestMapping("/{job}")
-public class JobController {
-    @Autowired
-    JobService jobService;
+@RestController
+@RequestMapping("/saved-jobs")
+@RequiredArgsConstructor
+public class SavedJobController {
+
+    private final SavedJobService savedJobService;
+
     @PostMapping
-    ApiResponse<JobResponse> createJob(@RequestBody JobCreationRequest request){
-        return ApiResponse.<JobResponse>builder()
-                .result(jobService.createJob(request))
+    public ApiResponse<SavedJobResponse> saveJob(@RequestBody SavedJobRequest request) {
+        return ApiResponse.<SavedJobResponse>builder()
+                .result(savedJobService.saveJob(request))
                 .build();
     }
-    @GetMapping
-    ApiResponse<List<Job>> getAllJob(){
-        return ApiResponse.<List<Job>>builder()
-                .result(jobService.getAll())
+
+    @DeleteMapping("/{jobId}")
+    public ApiResponse<String> unsaveJob(@PathVariable Long jobId) {
+        return ApiResponse.<String>builder()
+                .result("success")
                 .build();
     }
-    @PutMapping("/{id}")
-    ApiResponse<JobResponse> updateJob(@PathVariable long id, @RequestBody JobUpdateRequest request){
-        return ApiResponse.<JobResponse>builder()
-                .result(jobService.updateJob(id,request))
+
+    @GetMapping()
+    public ApiResponse<List<SavedJobResponse>> getSavedJobs() {
+        List<SavedJobResponse> savedJobs = savedJobService.getMySavedJobsByStudentId();
+        return ApiResponse.<List<SavedJobResponse>>builder()
+                .result(savedJobs)
                 .build();
     }
-    @GetMapping("/myPost/{id}")
-    ApiResponse<List<JobResponse>> getMyJobPost(@PathVariable long id){
-        return ApiResponse.<List<JobResponse>>builder()
-                .result(jobService.getMyJob(id))
-                .build();
-    }
-    @GetMapping("/{id}")
-    ApiResponse<JobResponse> getJobDetails(@PathVariable long id){
-        return ApiResponse.<JobResponse>builder()
-                .result(jobService.getJobDetails(id))
+
+    @GetMapping("/check/{jobId}")
+    public ApiResponse<Boolean> isJobSaved(@PathVariable Long jobId) {
+        boolean isSaved = savedJobService.isJobSaved(jobId);
+        return ApiResponse.<Boolean>builder()
+                .result(isSaved)
                 .build();
     }
 }
