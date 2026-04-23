@@ -1,21 +1,49 @@
 package com.unipart.unipart_backend.entity;
 
-import lombok.AccessLevel;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
-@Data
+import lombok.Getter;
+import lombok.Setter;
+
+@Entity
+@Table(name = "otp")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Otp {
-    int otp;
-    String email;
-    LocalDateTime expirationTime;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private Integer otpCode;
+
+    @Column(nullable = false)
+    private LocalDateTime expirationTime;
+
+    @Column(nullable = false)
+    private Boolean isUsed = false;
+
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expirationTime);
+    }
 }
