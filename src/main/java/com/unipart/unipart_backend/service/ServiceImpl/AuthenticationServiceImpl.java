@@ -142,14 +142,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private String generateToken(User user){
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getFullName())
+                .subject(user.getUsername())
                 .issuer("unipart")
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(VALIDATION_DURATION, ChronoUnit.HOURS).toEpochMilli()
                 ))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("scope",user.getRole())
+                .claim("userId", user.getId())
+                .claim("scope", user.getRole().getName())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(jwsHeader,payload);

@@ -1,12 +1,23 @@
 package com.unipart.unipart_backend.dto.response;
 
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 import java.time.LocalDateTime;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+
 public class ApplicationResponse {
-    private Long id;
-    private String studentId;
-    private Long jobId;
-    private String status;
-    private LocalDateTime appliedAt;
-    private LocalDateTime completedAt;
+    Long id;
+    Long jobId;
+    String jobTitle;
+    String studentId;
+    String studentName;
+    String status;
+    LocalDateTime appliedAt;
+    LocalDateTime completedAt;
 }

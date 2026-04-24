@@ -8,6 +8,7 @@ import com.unipart.unipart_backend.entity.Employer;
 import com.unipart.unipart_backend.entity.Job;
 import com.unipart.unipart_backend.entity.Student;
 import com.unipart.unipart_backend.entity.User;
+import com.unipart.unipart_backend.enums.ApplicationStatus;
 import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.mapper.ApplicationMapper;
 import com.unipart.unipart_backend.repository.ApplicationJobRepository;
@@ -32,6 +33,7 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
     private final EmployerRepository employerRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
+    
     @Override
     @PreAuthorize("hasRole('STUDENT')")
     public ApplicationResponse applyJob(ApplyJobRequest request) {
@@ -47,7 +49,7 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
                 .student(student)
                 .jobId(job.getId())
                 .job(job)
-                .status("PENDING")
+                .status(ApplicationStatus.PENDING)
                 .appliedAt(LocalDateTime.now())
                 .build();
 
@@ -69,8 +71,10 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
         Application application = applicationJobRepository.findById(request.getApplicationId())
                 .orElseThrow();
 
-        application.setStatus(request.getStatus());
-        if ("COMPLETED".equals(request.getStatus())) {
+        ApplicationStatus newStatus = ApplicationStatus.valueOf(request.getStatus().toUpperCase());
+        application.setStatus(newStatus);
+        
+        if (ApplicationStatus.COMPLETED.equals(newStatus)) {
             application.setCompletedAt(LocalDateTime.now());
         } else {
             application.setCompletedAt(null);

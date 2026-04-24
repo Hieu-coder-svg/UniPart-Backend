@@ -5,35 +5,64 @@ import com.unipart.unipart_backend.dto.request.ApplyJobUpdateRequest;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
 import com.unipart.unipart_backend.dto.response.ApplicationResponse;
 import com.unipart.unipart_backend.service.ApplicationJobService;
+import com.unipart.unipart_backend.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/application")
 public class ApplicationController {
-    private ApplicationJobService applicationJobService;
-    @PostMapping
+
+    private final ApplicationService applicationService;
+    private final ApplicationJobService applicationJobService;
+
+    // --- API for EMPLOYER ---
+
+    @GetMapping("/employer/applications")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<List<ApplicationResponse>> getApplications() {
+        return ApiResponse.<List<ApplicationResponse>>builder()
+                .result(applicationService.getEmployerApplications())
+                .build();
+    }
+
+    @PutMapping("/employer/applications/{id}/accept")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<ApplicationResponse> accept(@PathVariable Long id) {
+        return ApiResponse.<ApplicationResponse>builder()
+                .result(applicationService.acceptApplication(id))
+                .build();
+    }
+
+    @PutMapping("/employer/applications/{id}/reject")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<ApplicationResponse> reject(@PathVariable Long id) {
+        return ApiResponse.<ApplicationResponse>builder()
+                .result(applicationService.rejectApplication(id))
+                .build();
+    }
+
+    // --- API for APPLICATION JOB (Student) ---
+
+    @PostMapping("/application")
     public ApiResponse<ApplicationResponse> applyJob(@RequestBody ApplyJobRequest request){
         return ApiResponse.<ApplicationResponse>builder()
                 .result(applicationJobService.applyJob(request))
                 .build();
     }
-    @DeleteMapping
+
+    @DeleteMapping("/application")
     public ApiResponse<String> deleteApplyJob(@RequestParam long applicationId){
         applicationJobService.deleteApplicationJob(applicationId);
         return ApiResponse.<String>builder()
                 .result("Application has been deleted")
                 .build();
     }
-    @PutMapping
+
+    @PutMapping("/application")
     public ApiResponse<ApplicationResponse> changeStatusApplyJob(@RequestBody ApplyJobUpdateRequest request){
         return ApiResponse.<ApplicationResponse>builder()
                 .result(applicationJobService.changeStatus(request))

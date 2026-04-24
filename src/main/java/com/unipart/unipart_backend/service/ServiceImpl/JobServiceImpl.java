@@ -159,7 +159,7 @@ public class JobServiceImpl implements JobService {
                 .map(application -> {
                     Job job = application.getJob();
                     JobResponse jobResponse = jobMapper.toJobResponse(job);
-                    jobResponse.setStatus(application.getStatus());
+                    jobResponse.setStatus(application.getStatus().name());
                     return jobResponse;
                 })
                 .collect(Collectors.toList());

@@ -24,41 +24,55 @@ public class ApplicationConfig {
     private RoleRepository roleRepository;
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
-        return application -> {
-            if(userRepository.findByUsername("admin").isEmpty()){
-                var role = roleRepository.findById(1).orElseThrow();
-                User user = User.builder()
-                       .username("admin")
-                       .passwordHash(passwordEncoder.encode("Admin123"))
-                       .role(role)
-                       .build();
+        return args -> {
 
-               userRepository.save(user);
-               log.warn(user.getUsername());
-            };
-            if(userRepository.findByUsername("student").isEmpty()){
-                var roles = roleRepository.findById(2).orElseThrow();
-                User user = User.builder()
+            // roles
+            Role adminRole = roleRepository.findByName("ADMIN")
+                    .orElseGet(() -> roleRepository.save(Role.builder().name("ADMIN").build()));
+
+            Role studentRole = roleRepository.findByName("STUDENT")
+                    .orElseGet(() -> roleRepository.save(Role.builder().name("STUDENT").build()));
+
+            Role employerRole = roleRepository.findByName("EMPLOYER")
+                    .orElseGet(() -> roleRepository.save(Role.builder().name("EMPLOYER").build()));
+
+            // admin
+            if (userRepository.findByUsername("admin").isEmpty()) {
+                userRepository.save(User.builder()
+                        .username("admin")
+                        .email("admin@gmail.com")
+                        .passwordHash(passwordEncoder.encode("Admin123"))
+                        .role(adminRole)
+                        .isActived(true)
+                        .isBlocked(false)
+                        .build());
+            }
+
+            // student
+            if (userRepository.findByUsername("student").isEmpty()) {
+                userRepository.save(User.builder()
                         .username("student")
+                        .email("student@gmail.com")
                         .passwordHash(passwordEncoder.encode("Student123"))
-                        .role(roles)
-                        .build();
+                        .role(studentRole)
+                        .isActived(true)
+                        .isBlocked(false)
+                        .build());
+            }
 
-                userRepository.save(user);
-                log.warn(user.getUsername());
-            };
-            if(userRepository.findByUsername("employer").isEmpty()){
-                var rolee = roleRepository.findById(3).orElseThrow();
-                User user = User.builder()
+            // employer
+            if (userRepository.findByUsername("employer").isEmpty()) {
+                userRepository.save(User.builder()
                         .username("employer")
+                        .email("employer@gmail.com")
                         .passwordHash(passwordEncoder.encode("Employer123"))
-                        .role(rolee)
-                        .build();
-
-                userRepository.save(user);
-                log.warn(user.getUsername());
-            };
+                        .role(employerRole)
+                        .isActived(true)
+                        .isBlocked(false)
+                        .build());
+            }
         };
+
     }
 
 }
