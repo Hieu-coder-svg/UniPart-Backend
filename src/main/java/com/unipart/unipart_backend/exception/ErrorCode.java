@@ -19,7 +19,7 @@ public enum ErrorCode {
     INVALID_KEY(1007,"Invalid message key",HttpStatus.BAD_REQUEST),
     UNAUTHORIZE(1008,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
     INVALID_DOB(1009,"Bạn phải lớn hơn {min} tuổi",HttpStatus.FORBIDDEN),
-
+    REMOVE_APPLICATION(1010,"Bạn không thể xóa",HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

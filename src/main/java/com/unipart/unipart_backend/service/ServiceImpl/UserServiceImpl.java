@@ -50,10 +50,18 @@ public class UserServiceImpl implements UserService {
     OtpService otpService;
     EmployerMapper employerMapper;
     EmployerRepository employerRepository;
-    public StudentResponse registerStudent(StudentRegistrationRequest request) {
 
+    private User getCurrentUser() {
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+    }
+    public StudentResponse registerStudent(StudentRegistrationRequest request) {
         User user = userMapper.toUserEntity(request);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setIsActived(false); // Đợi xác thực OTP
+        user.setIsBlocked(false);
         var role = roleRepository.findById(2).orElseThrow();
         user.setRole(role);
         user = userRepository.save(user);
@@ -64,22 +72,18 @@ public class UserServiceImpl implements UserService {
         student.setUser(user);
 
         student = studentRepository.save(student);
-        return userMapper.toStudentResponse(user);
+        return studentMapper.toStudentResponse(student);
     }
     @PreAuthorize("hasRole('STUDENT')")
     public StudentResponse updateProfileStudent(StudentUpdateRequest request) {
-        var context = SecurityContextHolder.getContext();
-       String name = context.getAuthentication().getName();
-
-        User user = userRepository.findByUsername(name)
-                .orElseThrow(() ->new AppException(ErrorCode.USER_NOT_EXIST));
+        User user = getCurrentUser();
 
         userMapper.updateUserFromRequest(request, user);
         userRepository.save(user);
         var student = studentRepository.findByUser(user);
         studentMapper.updateStudentFromRequest(request,student);
         studentRepository.save(student);
-        return userMapper.toStudentResponse(user);
+        return studentMapper.toStudentResponse(student);
     }
     public EmployerResponse registerEmployer(EmployerRegistrationRequest request) {
         User user = employerMapper.toUserEntity(request);
@@ -98,13 +102,10 @@ public class UserServiceImpl implements UserService {
         employer.setUser(user);
         employer.setId(user.getId());
         employerRepository.save(employer);
-        return employerMapper.toEmployerResponse(user);
+        return employerMapper.toEmployerResponse(employer);
     }
     public EmployerResponse updateProfileEmployer(EmployerUpdateRequest request) {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(name)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        User user = getCurrentUser();
         Employer employer = employerRepository.findById(user.getId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin nhà tuyển dụng"));
         employerMapper.updateUserFromRequest(request, user);
@@ -112,7 +113,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         employerMapper.updateEmployerFromRequest(request, employer);
         employerRepository.save(employer);
-        return employerMapper.toEmployerResponse(user);
+        return employerMapper.toEmployerResponse(employer);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -127,21 +128,14 @@ public class UserServiceImpl implements UserService {
     }
     @PreAuthorize("hasRole('STUDENT')")
     public StudentResponse getStudentMyInfo(){
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-
-       User user =  userRepository.findByUsername(name)
-                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXIST));
-        var student = studentRepository.findByUser(user);
-        return userMapper.toStudentResponse(user);
+        User user = getCurrentUser();
+        Student student = user.getStudent();
+        return studentMapper.toStudentResponse(student);
     }
     @PreAuthorize("hasRole('EMPLOYER')")
     public EmployerResponse getEmployerMyInfo(){
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        User user =  userRepository.findByUsername(name)
-                .orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXIST));
+        User user = getCurrentUser();
         var employer = employerRepository.findByUser(user);
-        return employerMapper.toEmployerResponse(user);
+        return employerMapper.toEmployerResponse(employer);
     }
 }

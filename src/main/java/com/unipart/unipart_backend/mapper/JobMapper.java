@@ -39,6 +39,6 @@ public interface JobMapper {
     JobResponse toJobResponse(Job job);
 
     List<JobResponse> toJobResponseList(List<Job> job);
+    JobTimeSlotResponse toJobTimeSlotResponse(JobTimeSlot jobTimeSlot);
 
-    List<JobTimeSlotResponse> toTimeSlotResponses(List<JobTimeSlot> timeSlots);
 }
