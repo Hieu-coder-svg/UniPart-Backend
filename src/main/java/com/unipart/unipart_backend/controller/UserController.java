@@ -1,7 +1,12 @@
 package com.unipart.unipart_backend.controller;
 
+import com.unipart.unipart_backend.dto.request.EmployerRegistrationRequest;
+import com.unipart.unipart_backend.dto.request.EmployerUpdateRequest;
 import com.unipart.unipart_backend.dto.request.StudentRegistrationRequest;
+import com.unipart.unipart_backend.dto.request.StudentUpdateRequest;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
+import com.unipart.unipart_backend.dto.response.EmployerResponse;
+import com.unipart.unipart_backend.dto.response.StudentResponse;
 import com.unipart.unipart_backend.dto.response.UserResponse;
 import com.unipart.unipart_backend.entity.User;
 import com.unipart.unipart_backend.service.UserService;
@@ -21,38 +26,56 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
+    @PostMapping("/register-student")
+    ApiResponse<StudentResponse> registerStudent(@RequestBody StudentRegistrationRequest user){
+        ApiResponse<StudentResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.registerStudent(user));
+        return apiResponse;
 
-    @PostMapping
-    ApiResponse<UserResponse> createUser(@RequestBody StudentRegistrationRequest user){
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(userService.createStudentUser(user));
+    }
+    @PostMapping("/register-employer")
+    ApiResponse<EmployerResponse> registerEmployer(@RequestBody EmployerRegistrationRequest user){
+        ApiResponse<EmployerResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.registerEmployer(user));
         return apiResponse;
 
     }
     @GetMapping
     ApiResponse<List<UserResponse>>  getAllUsers(){
-
         return ApiResponse.<List<UserResponse>> builder()
                 .result(userService.getAll())
                 .build() ;
     }
-//    @PutMapping("/{id}")
-//    ApiResponse<UserResponse> updateUser(@PathVariable String id,@RequestBody StudentRegistrationRequest user){
-//        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-//        apiResponse.setResult(userService.updateStudentUser(id, user));
-//        return apiResponse;
-//    }
-    @GetMapping("/{id}")
-    ApiResponse<UserResponse> getUserId(@PathVariable String id){
+    @PostMapping("/myStudentInfo")
+    ApiResponse<StudentResponse> updateProfileStudent(@RequestBody StudentUpdateRequest request){
+        ApiResponse<StudentResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.updateProfileStudent(request));
+        return apiResponse;
+    }
 
-        return ApiResponse.<UserResponse> builder()
-                .result(userService.findUser(id))
+    @GetMapping("/myStudentInfo")
+    ApiResponse<StudentResponse> getMyStudentInfo(){
+        return ApiResponse.<StudentResponse> builder()
+                .result(userService.getStudentMyInfo())
                 .build() ;
     }
-    @GetMapping("/{myInfo}")
-    ApiResponse<UserResponse> getMyInfo(@PathVariable String id){
+    @PostMapping("/myEmployerInfo")
+    ApiResponse<EmployerResponse> updateProfileEmployer(@RequestBody EmployerUpdateRequest request){
+        ApiResponse<EmployerResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.updateProfileEmployer(request));
+        return apiResponse;
+    }
+
+    @GetMapping("/myEmployerInfo")
+    ApiResponse<EmployerResponse> getMyEmployerInfo(){
+        return ApiResponse.<EmployerResponse> builder()
+                .result(userService.getEmployerMyInfo())
+                .build() ;
+    }
+    @GetMapping("/{id}")
+    ApiResponse<UserResponse> getUserId(@PathVariable String id){
         return ApiResponse.<UserResponse> builder()
-                .result(userService.getMyInfo())
+                .result(userService.findUser(id))
                 .build() ;
     }
 }
