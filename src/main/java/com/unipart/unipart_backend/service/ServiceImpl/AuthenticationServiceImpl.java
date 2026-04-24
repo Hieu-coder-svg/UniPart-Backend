@@ -149,7 +149,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         Instant.now().plus(VALIDATION_DURATION, ChronoUnit.HOURS).toEpochMilli()
                 ))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("scope",user.getRole())
+                .claim("userId", user.getId())
+                .claim("scope", user.getRole().getName())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(jwsHeader,payload);

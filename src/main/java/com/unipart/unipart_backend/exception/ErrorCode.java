@@ -20,6 +20,17 @@ public enum ErrorCode {
     UNAUTHORIZE(1008,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
     INVALID_DOB(1009,"Bạn phải lớn hơn {min} tuổi",HttpStatus.FORBIDDEN),
     REMOVE_APPLICATION(1010,"Bạn không thể xóa",HttpStatus.BAD_REQUEST),
+
+    // Application
+    APPLICATION_NOT_FOUND(2001, "The application does not exist", HttpStatus.NOT_FOUND),
+    APPLICATION_ALREADY_PROCESSED(2002, "The application has already been processed", HttpStatus.CONFLICT),
+    JOB_IS_FULL(2003, "The job is full", HttpStatus.CONFLICT),
+    APPLICATION_FORBIDDEN(2004, "You do not have permission to work with this application", HttpStatus.FORBIDDEN),
+    // Package
+    PACKAGE_NOT_FOUND(3001, "Package does not exist", HttpStatus.NOT_FOUND),
+    EMPLOYER_NOT_FOUND(3002, "Employer does not exist", HttpStatus.NOT_FOUND),
+    PURCHASE_NOT_FOUND(3003, "Purchase record not found", HttpStatus.NOT_FOUND),
+    PAYMENT_INVALID_SIGNATURE(3004, "Invalid payment signature", HttpStatus.BAD_REQUEST),
     ;
     private int code;
     private String message;

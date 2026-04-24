@@ -1,4 +1,5 @@
 package com.unipart.unipart_backend.entity;
+import com.unipart.unipart_backend.enums.ApplicationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -46,12 +47,15 @@ public class Application {
     private Job job;
 
 
-    @Column(name = "status", length = 20, nullable = false)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ApplicationStatus status;
 
     @Column(name = "applied_at", updatable = false)
     private LocalDateTime appliedAt;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+
 }
