@@ -1,5 +1,6 @@
 package com.unipart.unipart_backend.service.ServiceImpl;
 import com.unipart.unipart_backend.entity.Application;
+import com.unipart.unipart_backend.entity.Student;
 import com.unipart.unipart_backend.repository.ApplicationJobRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +45,7 @@ public class JobServiceImpl implements JobService {
     private final JobMapper jobMapper;
     private final UserRepository userRepository;
     private final ApplicationJobRepository applicationJobRepository;
+
     public JobResponse createJob(JobCreationRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Employer employer = employerRepository.findByUserUsername(username);

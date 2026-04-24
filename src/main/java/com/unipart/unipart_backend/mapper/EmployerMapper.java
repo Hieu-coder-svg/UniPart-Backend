@@ -20,11 +20,23 @@ public interface EmployerMapper {
 
     void updateEmployerFromRequest(EmployerUpdateRequest request, @MappingTarget Employer employer);
 
-    @Mapping(target = "id", source = "user.id")
-    @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "email", source = "user.email")
-    @Mapping(target = "fullName", source = "user.fullName")
+    @Mapping(target = "id", source = "employer.user.id")
+    @Mapping(target = "username", source = "employer.user.username")
+    @Mapping(target = "email", source = "employer.user.email")
+    @Mapping(target = "fullName", source = "employer.user.fullName")
+    @Mapping(target = "dateOfBirth", source = "employer.user.dateOfBirth")
+    @Mapping(target = "phoneNumber", source = "employer.user.phoneNumber")
+    @Mapping(target = "gender", source = "employer.user.gender")
+    @Mapping(target = "isBlocked", source = "employer.user.isBlocked")
+    @Mapping(target = "isActived", source = "employer.user.isActived")
+    @Mapping(target = "createdAt", source = "employer.user.createdAt")
+    @Mapping(target = "updatedAt", source = "employer.user.updatedAt")
+
     @Mapping(target = "companyName", source = "employer.companyName")
     @Mapping(target = "companyAddress", source = "employer.companyAddress")
-    EmployerResponse toEmployerResponse(User user);
+    @Mapping(target = "latitude", source = "employer.latitude")
+    @Mapping(target = "longitude", source = "employer.longitude")
+    @Mapping(target = "description", source = "employer.description")
+    @Mapping(target = "rating", source = "employer.rating")
+    EmployerResponse toEmployerResponse(Employer employer);
 }
