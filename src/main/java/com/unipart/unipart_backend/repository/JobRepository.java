@@ -11,4 +11,5 @@ public interface JobRepository extends JpaRepository<Job,Long> {
     Job getById(long id);
     List<Job> findAllByEmployerId(String employerId);
 
+    List<Job> findByIsHideFalseAndExpiredAtAfter(java.time.LocalDateTime now);
 }
