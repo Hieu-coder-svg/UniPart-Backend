@@ -17,7 +17,7 @@ import java.time.LocalDate;
     private LocalDate dateOfBirth;
     private String phoneNumber;
     private String gender;
-
+    private String avatar;
     private String companyName;
     private String companyAddress;
     private Double latitude;
