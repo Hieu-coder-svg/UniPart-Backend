@@ -2,6 +2,7 @@ package com.unipart.unipart_backend.service.ServiceImpl;
 import com.unipart.unipart_backend.entity.Application;
 import com.unipart.unipart_backend.entity.Student;
 import com.unipart.unipart_backend.repository.ApplicationJobRepository;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -125,8 +126,13 @@ public class JobServiceImpl implements JobService {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), "%" + request.getTitle().toLowerCase() + "%"));
             }
             if (request.getWorkingShift() != null && !request.getWorkingShift().isEmpty()) {
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("workingShift")), "%" + request.getWorkingShift().toLowerCase() + "%"));
+                CriteriaBuilder.In<String> inClause = criteriaBuilder.in(root.get("workingShift"));
+                for (String shift : request.getWorkingShift()) {
+                    inClause.value(shift);
+                }
+                predicates.add(inClause);
             }
+
             if (request.getUrgent() != null) {
                 predicates.add(criteriaBuilder.equal(root.get("urgent"), request.getUrgent()));
             }

@@ -21,6 +21,7 @@ public class EmployerResponse {
     private String username;
     private String email;
     private String fullName;
+    private String avatar;
     private LocalDate dateOfBirth;
     private String phoneNumber;
     private String gender;

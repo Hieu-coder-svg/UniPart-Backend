@@ -33,6 +33,8 @@ public class StudentUpdateRequest {
     @NotBlank(message = "Trường đại học không được để trống")
     private String university;
 
+    private String avatar;
+
     @NotBlank(message = "Chuyên ngành không được để trống")
     private String major;
 

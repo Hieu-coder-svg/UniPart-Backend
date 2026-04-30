@@ -26,7 +26,7 @@ public interface StudentMapper {
     @Mapping(target = "roleName", source = "student.user.role.name")
     @Mapping(target = "createdAt", source = "student.user.createdAt")
     @Mapping(target = "updatedAt", source = "student.user.updatedAt")
-
+    @Mapping(target = "avatar", source = "student.user.avatar")
     @Mapping(target = "university", source = "student.university")
     @Mapping(target = "major", source = "student.major")
     @Mapping(target = "address", source = "student.address")
