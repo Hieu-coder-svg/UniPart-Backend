@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ResetPasswordRequest {
-    private String email;
+public class ChangePasswordRequest {
+    private String currentPassword;
+    private String newPassword;
 }

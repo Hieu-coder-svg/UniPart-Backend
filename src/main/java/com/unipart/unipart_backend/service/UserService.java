@@ -1,7 +1,9 @@
 package com.unipart.unipart_backend.service;
 
+import com.unipart.unipart_backend.dto.request.ChangePasswordRequest;
 import com.unipart.unipart_backend.dto.request.EmployerRegistrationRequest;
 import com.unipart.unipart_backend.dto.request.EmployerUpdateRequest;
+import com.unipart.unipart_backend.dto.request.ForgotPasswordRequest;
 import com.unipart.unipart_backend.dto.request.StudentRegistrationRequest;
 import com.unipart.unipart_backend.dto.request.StudentUpdateRequest;
 import com.unipart.unipart_backend.dto.request.UserUpdateRequest;
@@ -21,4 +23,6 @@ public interface UserService  {
     EmployerResponse registerEmployer(EmployerRegistrationRequest request);
     EmployerResponse updateProfileEmployer(EmployerUpdateRequest request);
     EmployerResponse getEmployerMyInfo();
+    void forgotPassword(ForgotPasswordRequest request);
+    UserResponse changePassword(ChangePasswordRequest request);
 }

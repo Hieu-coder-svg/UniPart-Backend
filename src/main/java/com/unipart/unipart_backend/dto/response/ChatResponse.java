@@ -12,10 +12,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApiResponse <T> {
-    @Builder.Default
-    int code = 1000;
+public class ChatResponse {
     String message;
-    T result;
-
 }
