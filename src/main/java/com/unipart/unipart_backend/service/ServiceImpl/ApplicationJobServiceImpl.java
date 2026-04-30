@@ -10,6 +10,7 @@ import com.unipart.unipart_backend.entity.Job;
 import com.unipart.unipart_backend.entity.Notification;
 import com.unipart.unipart_backend.entity.Student;
 import com.unipart.unipart_backend.entity.User;
+import com.unipart.unipart_backend.enums.ApplicationStatus;
 import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.ApplicationMapper;
@@ -39,7 +40,6 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final NotificationMapper notificationMapper;
-
     private Student getCurrentStudent() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return studentRepository.findByUsernameWithUser(username)
@@ -59,7 +59,7 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
                 .student(student)
                 .jobId(job.getId())
                 .job(job)
-                .status("PENDING")
+                .status(ApplicationStatus.PENDING)
                 .appliedAt(LocalDateTime.now())
                 .build();
 
@@ -105,7 +105,10 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
         NotificationCreationRequest requestNotification =  NotificationCreationRequest.builder()
                 .userId(application.getStudentId())
                 .build();
-        application.setStatus(request.getStatus());
+        ApplicationStatus status = ApplicationStatus.valueOf(
+                request.getStatus().trim().toUpperCase()
+        );
+        application.setStatus(status);
         if ("COMPLETED".equals(request.getStatus())) {
             application.setCompletedAt(LocalDateTime.now());
             requestNotification.setTitle("Xác nhận hoàn thành công việc");

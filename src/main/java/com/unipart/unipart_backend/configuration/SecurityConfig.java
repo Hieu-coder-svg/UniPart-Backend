@@ -18,6 +18,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.spec.SecretKeySpec;
 
@@ -27,17 +30,20 @@ import javax.crypto.spec.SecretKeySpec;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = {"/users","/auth/login","/auth/token","/auth/introspect","/auth/logout","/auth/refresh"};
+    private final String[] PUBLIC_ENDPOINTS = {"/users/**", "/auth/**","/chat","/job/**","/otp/**"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
             httpSecurity.authorizeHttpRequests(requests ->
-                    requests.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                    requests.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/**", "/packages", "/packages/**", "/payment/vnpay-return").permitAll()
                             .anyRequest().authenticated());
-            httpSecurity.csrf(AbstractHttpConfigurer :: disable);
+            httpSecurity
+                    .cors(cors -> {})
+                    .csrf(AbstractHttpConfigurer::disable);
             httpSecurity.oauth2ResourceServer(oauth2 ->
                     oauth2.jwt(jwtConfigurer ->
                             jwtConfigurer.decoder(customJwtDecoder)
@@ -60,6 +66,20 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
             return new BCryptPasswordEncoder(10);
+    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(java.util.List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 }
 

@@ -2,7 +2,6 @@ package com.unipart.unipart_backend.mapper;
 
 import com.unipart.unipart_backend.dto.request.StudentRegistrationRequest;
 import com.unipart.unipart_backend.dto.request.StudentUpdateRequest;
-import com.unipart.unipart_backend.dto.response.StudentResponse;
 import com.unipart.unipart_backend.dto.response.UserResponse;
 import com.unipart.unipart_backend.entity.User;
 import org.mapstruct.Mapper;

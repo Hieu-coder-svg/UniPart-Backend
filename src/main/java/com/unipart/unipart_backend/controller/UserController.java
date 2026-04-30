@@ -1,7 +1,9 @@
 package com.unipart.unipart_backend.controller;
 
+import com.unipart.unipart_backend.dto.request.ChangePasswordRequest;
 import com.unipart.unipart_backend.dto.request.EmployerRegistrationRequest;
 import com.unipart.unipart_backend.dto.request.EmployerUpdateRequest;
+import com.unipart.unipart_backend.dto.request.ForgotPasswordRequest;
 import com.unipart.unipart_backend.dto.request.StudentRegistrationRequest;
 import com.unipart.unipart_backend.dto.request.StudentUpdateRequest;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
@@ -26,20 +28,7 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
-    @PostMapping("/register-student")
-    ApiResponse<StudentResponse> registerStudent(@RequestBody StudentRegistrationRequest user){
-        ApiResponse<StudentResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(userService.registerStudent(user));
-        return apiResponse;
 
-    }
-    @PostMapping("/register-employer")
-    ApiResponse<EmployerResponse> registerEmployer(@RequestBody EmployerRegistrationRequest user){
-        ApiResponse<EmployerResponse> apiResponse = new ApiResponse<>();
-        apiResponse.setResult(userService.registerEmployer(user));
-        return apiResponse;
-
-    }
     @GetMapping
     ApiResponse<List<UserResponse>>  getAllUsers(){
         return ApiResponse.<List<UserResponse>> builder()
@@ -78,4 +67,5 @@ public class UserController {
                 .result(userService.findUser(id))
                 .build() ;
     }
+
 }

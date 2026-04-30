@@ -1,5 +1,6 @@
 package com.unipart.unipart_backend.dto.response;
 
+import com.unipart.unipart_backend.dto.request.RecommendedItem;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,15 +8,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApiResponse <T> {
-    @Builder.Default
-    int code = 1000;
-    String message;
-    T result;
-
+public class AIResponse {
+    private String message;
+    private List<RecommendedItem> recommendations;
 }
+

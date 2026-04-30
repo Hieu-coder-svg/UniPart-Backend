@@ -1,5 +1,6 @@
 package com.unipart.unipart_backend.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import jakarta.servlet.ServletException;
@@ -8,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 

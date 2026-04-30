@@ -20,6 +20,13 @@ public enum ErrorCode {
     UNAUTHORIZE(1008,"Bạn không có quyền truy cập",HttpStatus.FORBIDDEN),
     INVALID_DOB(1009,"Bạn phải lớn hơn {min} tuổi",HttpStatus.FORBIDDEN),
     REMOVE_APPLICATION(1010,"Bạn không thể xóa",HttpStatus.BAD_REQUEST),
+    USER_EXISTED(1011,"Tên người dùng đã tồn tại",HttpStatus.BAD_REQUEST),
+    EMAIL_EXISTED(1012,"Email đã tồn tại",HttpStatus.BAD_REQUEST),
+    INVALID_OTP(1013,"Mã OTP không tồn tại hoặc đã được sử dụng",HttpStatus.BAD_REQUEST),
+    INVALID_OTP_FORMAT(1014,"Mã OTP phải là định dạng số",HttpStatus.BAD_REQUEST),
+    WRONG_OTP(1015,"Mã OTP không chính xác",HttpStatus.BAD_REQUEST),
+    EXPIRED_OTP(1016,"Mã OTP đã hết hạn",HttpStatus.BAD_REQUEST),
+    EXIST_PHONE(1017,"Số điện thoại đã tồn tại",HttpStatus.BAD_REQUEST),
 
     // Application
     APPLICATION_NOT_FOUND(2001, "The application does not exist", HttpStatus.NOT_FOUND),
