@@ -54,6 +54,9 @@ public class User {
     @Column(name = "password_hash", length = 255, nullable = false)
     private String passwordHash;
 
+    @Column(name = "avatar", length = 255, nullable = false)
+    private String avatar;
+
     @NotBlank(message = "Họ tên không được để trống")
     @Size(max = 100, message = "Họ tên tối đa 100 ký tự")
     @Column(name = "full_name", length = 100)
@@ -86,10 +89,11 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Student student;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Employer employer;
 
 }

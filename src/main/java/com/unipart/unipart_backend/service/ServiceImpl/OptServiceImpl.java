@@ -26,7 +26,7 @@ import java.util.Random;
 public class OptServiceImpl implements OtpService {
     private final OtpRepository otpRepository;
     private final JavaMailSender mailSender;
-   private UserRepository userRepository;
+   private final UserRepository userRepository;
     @Value("${spring.mail.username}")
     private String fromEmail;
 
@@ -51,18 +51,18 @@ public class OptServiceImpl implements OtpService {
     @Transactional
     public void verifyOtp(VerifyOTPRequest request) {
         Otp otp = otpRepository.findFirstByEmailAndIsUsedOrderByCreatedAtDesc(request.getEmail(), false)
-                .orElseThrow(() -> new RuntimeException("Mã OTP không tồn tại hoặc đã được sử dụng"));
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_OTP));
         Integer inputOtpCode;
         try {
             inputOtpCode = Integer.parseInt(request.getOtp());
         } catch (NumberFormatException e) {
-            throw new RuntimeException("Mã OTP phải là định dạng số");
+            throw new AppException(ErrorCode.INVALID_OTP_FORMAT);
         }
         if (!otp.getOtpCode().equals(inputOtpCode)) {
-            throw new RuntimeException("Mã OTP không chính xác");
+            throw new AppException(ErrorCode.WRONG_OTP);
         }
         if (otp.isExpired()) {
-            throw new RuntimeException("Mã OTP đã hết hạn");
+            throw new AppException(ErrorCode.EXPIRED_OTP);
         }
         otp.setIsUsed(true);
         otpRepository.save(otp);
@@ -76,13 +76,13 @@ public class OptServiceImpl implements OtpService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(toEmail);
-            helper.setSubject("✅ Mã OTP xác thực tài khoản Unipart");
+            helper.setSubject(" Mã OTP xác thực tài khoản Unipart");
 
             String htmlContent = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
                     <h2 style="color: #2c3e50;">Xác thực tài khoản Unipart</h2>
                     <p>Xin chào,</p>
-                    <p>Bạn đang đăng ký tài khoản <strong>Student</strong>. Mã OTP của bạn là:</p>
+                    <p>Bạn đang đăng ký tài khoản <strong>Người dùng mới</strong>. Mã OTP của bạn là:</p>
                     
                     <div style="text-align: center; margin: 30px 0;">
                         <h1 style="color: #e74c3c; font-size: 48px; letter-spacing: 10px; font-weight: bold;">%d</h1>
@@ -97,7 +97,7 @@ public class OptServiceImpl implements OtpService {
                 """.formatted(otpCode);
 
             helper.setText(htmlContent, true);
-            helper.setFrom("your-email@gmail.com", "Unipart");   // ← Thay bằng email của bạn
+            helper.setFrom(fromEmail, "Unipart");
 
             mailSender.send(message);
 

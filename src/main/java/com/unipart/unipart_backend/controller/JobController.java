@@ -17,11 +17,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@Controller
-@RequestMapping("/{job}")
+@RestController
+@RequestMapping("/job")
 public class JobController {
     @Autowired
     JobService jobService;
@@ -31,7 +32,7 @@ public class JobController {
                 .result(jobService.createJob(request))
                 .build();
     }
-    @GetMapping
+    @PostMapping("/search")
     ApiResponse<Page<JobResponse>> getAllJob(@RequestBody JobFilterRequest request){
         return ApiResponse.<Page<JobResponse>>builder()
                 .result(jobService.getAllJobs(request))

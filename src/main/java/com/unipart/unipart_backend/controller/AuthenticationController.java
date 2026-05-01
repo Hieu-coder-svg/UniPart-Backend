@@ -2,13 +2,21 @@ package com.unipart.unipart_backend.controller;
 
 import com.nimbusds.jose.JOSEException;
 import com.unipart.unipart_backend.dto.request.AuthenticationRequest;
+import com.unipart.unipart_backend.dto.request.ChangePasswordRequest;
+import com.unipart.unipart_backend.dto.request.EmployerRegistrationRequest;
+import com.unipart.unipart_backend.dto.request.ForgotPasswordRequest;
 import com.unipart.unipart_backend.dto.request.IntrospectRequest;
 import com.unipart.unipart_backend.dto.request.LogoutRequest;
 import com.unipart.unipart_backend.dto.request.RefreshRequest;
+import com.unipart.unipart_backend.dto.request.StudentRegistrationRequest;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
 import com.unipart.unipart_backend.dto.response.AuthenticationResponse;
+import com.unipart.unipart_backend.dto.response.EmployerResponse;
 import com.unipart.unipart_backend.dto.response.IntrospectResponse;
+import com.unipart.unipart_backend.dto.response.StudentResponse;
+import com.unipart.unipart_backend.dto.response.UserResponse;
 import com.unipart.unipart_backend.service.AuthenticationService;
+import com.unipart.unipart_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.text.ParseException;
 
 @RestController
-@RequestMapping("/{auth}")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationController {
     AuthenticationService authenticationService;
+    UserService userService;
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest authenticationRequest){
         var result = authenticationService.authenticate(authenticationRequest);
@@ -53,6 +62,33 @@ public class AuthenticationController {
        authenticationService.logout(request);
         return ApiResponse.<Void>builder()
                 .build();
+    }
+    @PostMapping("/forgotPassword")
+    ApiResponse<String> forgotPassword(@RequestBody ForgotPasswordRequest request){
+        userService.forgotPassword(request);
+        return ApiResponse.<String>builder()
+                .result("send request")
+                .build();
+    }
+    @PostMapping("/changePassword")
+    ApiResponse<UserResponse> changePassword(@RequestBody ChangePasswordRequest request){
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.changePassword(request))
+                .build();
+    }
+    @PostMapping("/register-student")
+    ApiResponse<StudentResponse> registerStudent(@RequestBody StudentRegistrationRequest user){
+        ApiResponse<StudentResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.registerStudent(user));
+        return apiResponse;
+
+    }
+    @PostMapping("/register-employer")
+    ApiResponse<EmployerResponse> registerEmployer(@RequestBody EmployerRegistrationRequest user){
+        ApiResponse<EmployerResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userService.registerEmployer(user));
+        return apiResponse;
+
     }
     @GetMapping("/test")
     public String test() {

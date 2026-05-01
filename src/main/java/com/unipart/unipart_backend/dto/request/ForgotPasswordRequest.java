@@ -1,4 +1,4 @@
-package com.unipart.unipart_backend.dto.response;
+package com.unipart.unipart_backend.dto.request;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ApiResponse <T> {
-    @Builder.Default
-    int code = 1000;
-    String message;
-    T result;
-
+public class ForgotPasswordRequest {
+    private String email;
 }
