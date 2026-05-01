@@ -6,6 +6,7 @@ import com.unipart.unipart_backend.entity.Job;
 import com.unipart.unipart_backend.enums.ApplicationStatus;
 import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
+import com.unipart.unipart_backend.mapper.ApplicationMapper;
 import com.unipart.unipart_backend.repository.ApplicationRepository;
 import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.service.ApplicationService;
@@ -24,6 +25,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
+    private final ApplicationMapper applicationMapper;
 
     // ===== Helper =====
 
@@ -41,19 +43,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         return authentication.getName();
     }
 
-    private ApplicationResponse toDTO(Application a) {
-        return ApplicationResponse.builder()
-                .id(a.getId())
-                .jobId(a.getJob().getId())
-                .jobTitle(a.getJob().getTitle())
-                .studentId(a.getStudent().getId())
-                .studentName(a.getStudent().getUser().getFullName())
-                .status(a.getStatus().name())
-                .appliedAt(a.getAppliedAt())
-                .completedAt(a.getCompletedAt())
-                .build();
-    }
-
     // ===== GET ALL =====
     @Override
     public List<ApplicationResponse> getEmployerApplications() {
@@ -62,7 +51,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         return applicationRepository
                 .findAllByEmployerIdWithDetails(employerId)
                 .stream()
-                .map(this::toDTO)
+                .map(applicationMapper::toResponse)
                 .toList();
     }
 
@@ -107,7 +96,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             jobRepository.save(job);
         }
 
-        return toDTO(app);
+        return applicationMapper.toResponse(app);
     }
 
     // ===== REJECT =====
@@ -134,6 +123,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setCompletedAt(LocalDateTime.now());
         applicationRepository.save(app);
 
-        return toDTO(app);
+        return applicationMapper.toResponse(app);
     }
 }

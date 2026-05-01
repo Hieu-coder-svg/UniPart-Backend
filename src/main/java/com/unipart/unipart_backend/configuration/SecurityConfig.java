@@ -36,6 +36,13 @@ public class SecurityConfig {
             httpSecurity.authorizeHttpRequests(requests ->
                     requests.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/**", "/packages", "/packages/**", "/payment/vnpay-return").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/reviews/employer/**", "/reviews/student/**").permitAll()
+                            // Community Post — public read
+                            .requestMatchers(HttpMethod.GET, "/categories", "/categories/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/posts", "/posts/**").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/comments/post/**").permitAll()
+                            // WebSocket handshake (SockJS)
+                            .requestMatchers("/ws/**").permitAll()
                             .anyRequest().authenticated());
             httpSecurity.csrf(AbstractHttpConfigurer :: disable);
             httpSecurity.oauth2ResourceServer(oauth2 ->
