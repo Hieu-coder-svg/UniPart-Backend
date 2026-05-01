@@ -8,6 +8,7 @@ import com.unipart.unipart_backend.entity.SubscriptionPackage;
 import com.unipart.unipart_backend.enums.PaymentStatus;
 import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
+import com.unipart.unipart_backend.mapper.PurchaseMapper;
 import com.unipart.unipart_backend.repository.EmployerPackagePurchaseRepository;
 import com.unipart.unipart_backend.repository.SubscriptionPackageRepository;
 import com.unipart.unipart_backend.service.PurchaseService;
@@ -19,7 +20,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +34,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final EmployerPackagePurchaseRepository purchaseRepository;
     private final VNPayService vnPayService;
     private final VNPayConfig vnPayConfig;
+    private final PurchaseMapper purchaseMapper;
 
     // ===== Helper =====
 
@@ -46,25 +47,6 @@ public class PurchaseServiceImpl implements PurchaseService {
             return jwt.getClaimAsString("userId");
         }
         return authentication.getName();
-    }
-
-    private PurchasePackageResponse toDTO(EmployerPackagePurchase purchase) {
-        SubscriptionPackage pkg = purchase.getSubscriptionPackage();
-        return PurchasePackageResponse.builder()
-                .id(purchase.getId())
-                .employerId(purchase.getEmployerId())
-                .packageId(purchase.getPackageId())
-                .packageName(pkg != null ? pkg.getName() : null)
-                .packageType(pkg != null ? pkg.getPackageType() : null)
-                .pricePaid(purchase.getPricePaid())
-                .paymentStatus(purchase.getPaymentStatus() != null
-                        ? purchase.getPaymentStatus().name() : null)
-                .transactionRef(purchase.getTransactionRef())
-                .purchasedAt(purchase.getPurchasedAt())
-                .startDate(purchase.getStartDate())
-                .endDate(purchase.getEndDate())
-                .tinsPurchased(purchase.getTinsPurchased())
-                .build();
     }
 
     // ===== CREATE PAYMENT URL =====
@@ -167,9 +149,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     public List<PurchasePackageResponse> getMyPurchases() {
         String employerId = getCurrentUserId();
-        return purchaseRepository.findAllByEmployerId(employerId)
-                .stream()
-                .map(this::toDTO)
-                .toList();
+        return purchaseMapper.toResponseList(
+                purchaseRepository.findAllByEmployerId(employerId));
     }
 }

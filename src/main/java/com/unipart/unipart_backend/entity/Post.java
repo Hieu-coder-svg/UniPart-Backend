@@ -1,18 +1,7 @@
 package com.unipart.unipart_backend.entity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -34,14 +23,17 @@ public class Post {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private Student student;
+    private User user;
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "category_id")
+    private Long categoryId;
 
-    @Column(name = "type", length = 20, nullable = false)
-    private String type;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    private Category category;
 
     @Column(name = "related_job_id")
     private Long relatedJobId;
@@ -50,6 +42,35 @@ public class Post {
     @JoinColumn(name = "related_job_id", insertable = false, updatable = false)
     private Job relatedJob;
 
+    @Column(name = "likes_count")
+    @Builder.Default
+    private Integer likesCount = 0;
+
+    @Column(name = "comments_count")
+    @Builder.Default
+    private Integer commentsCount = 0;
+
+    @Column(name = "shares_count")
+    @Builder.Default
+    private Integer sharesCount = 0;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        if (likesCount == null) likesCount = 0;
+        if (commentsCount == null) commentsCount = 0;
+        if (sharesCount == null) sharesCount = 0;
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
