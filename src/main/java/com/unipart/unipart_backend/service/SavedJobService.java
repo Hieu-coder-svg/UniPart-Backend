@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface SavedJobService {
     SavedJobResponse saveJob(SavedJobRequest request);
-    void unsaveJob(String studentId, Long jobId);
+    void unsaveJob(Long jobId);
     List<SavedJobResponse> getMySavedJobsByStudentId();
 
     boolean isJobSaved(Long jobId);

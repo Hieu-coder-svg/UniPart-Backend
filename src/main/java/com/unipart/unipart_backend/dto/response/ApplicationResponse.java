@@ -17,6 +17,10 @@ public class ApplicationResponse {
     String jobTitle;
     String studentId;
     String studentName;
+    String studentEmail;
+    String studentPhone;
+    String studentUniversity;
+    String studentMajor;
     String status;
     LocalDateTime appliedAt;
     LocalDateTime completedAt;

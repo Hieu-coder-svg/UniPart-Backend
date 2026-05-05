@@ -45,14 +45,17 @@ public class SavedJobServiceImpl implements SavedJobService {
         }
 
         SavedJob savedJob = savedJobMapper.toEntity(request);
+        savedJob.setStudentId(u.getId());
         savedJob.setSavedAt(LocalDateTime.now());
         SavedJob savedJobEntity = savedJobRepository.save(savedJob);
         return savedJobMapper.toDto(savedJobEntity);
     }
 
     @Override
-    public void unsaveJob(String studentId, Long jobId) {
-        Optional<SavedJob> savedJob = savedJobRepository.findByStudentIdAndJobId(studentId, jobId);
+    @PreAuthorize("hasRole('STUDENT')")
+    public void unsaveJob(Long jobId) {
+        User u = getCurrentUser();
+        Optional<SavedJob> savedJob = savedJobRepository.findByStudentIdAndJobId(u.getId(), jobId);
         savedJob.ifPresent(savedJobRepository::delete);
     }
 

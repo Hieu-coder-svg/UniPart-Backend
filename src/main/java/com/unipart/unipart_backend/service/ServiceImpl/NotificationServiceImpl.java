@@ -35,6 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
                 "/queue/notifications",
                 notificationResponse
         );
+        notificationRepository.save(notification);
     }
     @Override
     public NotificationResponse updateNotification(Long id, NotificationUpdateRequest request){
@@ -42,13 +43,13 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow();
         notificationMapper.updateEntityFromDto(request, existingNotification);
         Notification updatedNotification = notificationRepository.save(existingNotification);
+        NotificationResponse response = notificationMapper.toResponse(updatedNotification);
         messagingTemplate.convertAndSendToUser(
                 String.valueOf(existingNotification.getUserId()),
                 "/queue/notifications",
-                updatedNotification
+                response
         );
-
-        return notificationMapper.toResponse(updatedNotification);
+        return response;
     }
     public List<NotificationResponse> getMyNotifications(){
         var context = SecurityContextHolder.getContext();

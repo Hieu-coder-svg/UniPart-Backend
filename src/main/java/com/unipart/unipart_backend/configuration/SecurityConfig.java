@@ -38,6 +38,7 @@ public class SecurityConfig {
         public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
             httpSecurity.authorizeHttpRequests(requests ->
                     requests.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                            .requestMatchers("/ws/**").permitAll()
                             .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/**", "/packages", "/packages/**", "/payment/vnpay-return").permitAll()
                             .anyRequest().authenticated());

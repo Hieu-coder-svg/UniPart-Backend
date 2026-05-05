@@ -42,12 +42,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     private ApplicationResponse toDTO(Application a) {
+        var student = a.getStudent();
+        var user = student.getUser();
         return ApplicationResponse.builder()
                 .id(a.getId())
                 .jobId(a.getJob().getId())
                 .jobTitle(a.getJob().getTitle())
-                .studentId(a.getStudent().getId())
-                .studentName(a.getStudent().getUser().getFullName())
+                .studentId(student.getId())
+                .studentName(user.getFullName())
+                .studentEmail(user.getEmail())
+                .studentPhone(user.getPhoneNumber())
+                .studentUniversity(student.getUniversity())
+                .studentMajor(student.getMajor())
                 .status(a.getStatus().name())
                 .appliedAt(a.getAppliedAt())
                 .completedAt(a.getCompletedAt())

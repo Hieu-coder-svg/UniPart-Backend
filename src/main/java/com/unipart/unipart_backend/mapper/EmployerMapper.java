@@ -23,6 +23,7 @@ public interface EmployerMapper {
     @Mapping(target = "id", source = "employer.user.id")
     @Mapping(target = "username", source = "employer.user.username")
     @Mapping(target = "email", source = "employer.user.email")
+    @Mapping(target = "avatar", source = "employer.user.avatar")
     @Mapping(target = "fullName", source = "employer.user.fullName")
     @Mapping(target = "dateOfBirth", source = "employer.user.dateOfBirth")
     @Mapping(target = "phoneNumber", source = "employer.user.phoneNumber")

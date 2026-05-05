@@ -27,7 +27,7 @@ public enum ErrorCode {
     WRONG_OTP(1015,"Mã OTP không chính xác",HttpStatus.BAD_REQUEST),
     EXPIRED_OTP(1016,"Mã OTP đã hết hạn",HttpStatus.BAD_REQUEST),
     EXIST_PHONE(1017,"Số điện thoại đã tồn tại",HttpStatus.BAD_REQUEST),
-
+    INVALID_APPLICATION(1018,"Bạn đã apply công việc này rồi",HttpStatus.BAD_REQUEST),
     // Application
     APPLICATION_NOT_FOUND(2001, "The application does not exist", HttpStatus.NOT_FOUND),
     APPLICATION_ALREADY_PROCESSED(2002, "The application has already been processed", HttpStatus.CONFLICT),

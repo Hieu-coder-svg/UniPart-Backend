@@ -16,6 +16,7 @@ import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.ApplicationMapper;
 import com.unipart.unipart_backend.mapper.NotificationMapper;
 import com.unipart.unipart_backend.repository.ApplicationJobRepository;
+import com.unipart.unipart_backend.repository.ApplicationRepository;
 import com.unipart.unipart_backend.repository.EmployerRepository;
 import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.repository.StudentRepository;
@@ -40,6 +41,8 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final NotificationMapper notificationMapper;
+    private final ApplicationRepository applicationRepository;
+
     private Student getCurrentStudent() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return studentRepository.findByUsernameWithUser(username)
@@ -53,6 +56,9 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
         Student student = getCurrentStudent();
           Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow();
+        if (applicationJobRepository.existsByStudentIdAndJobId(student.getId(), job.getId())) {
+            throw new AppException(ErrorCode.INVALID_APPLICATION);
+        }
 
         Application application = Application.builder()
                 .studentId(student.getId())
@@ -67,10 +73,11 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
         NotificationCreationRequest requestNotification = NotificationCreationRequest.builder()
                 .userId(job.getEmployer().getUser().getId())
                 .title("Ứng tuyển công việc")
-                .content("Sinh viên " + student.getUser().getFullName() + " muốn làm công việc này")
+                .content("Sinh viên " + student.getUser().getFullName() + " muốn làm công việc "+job.getTitle())
                 .build();
 
         notificationService.createNotification(requestNotification);
+
         return applicationMapper.toResponse(savedApplication);
     }
 
