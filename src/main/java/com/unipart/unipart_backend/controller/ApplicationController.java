@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/application")
 @RequiredArgsConstructor
 public class ApplicationController {
 
@@ -21,7 +22,7 @@ public class ApplicationController {
 
     // --- API for EMPLOYER ---
 
-    @GetMapping("/employer/applications")
+    @GetMapping("/employer")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ApiResponse<List<ApplicationResponse>> getApplications() {
         return ApiResponse.<List<ApplicationResponse>>builder()
@@ -29,7 +30,7 @@ public class ApplicationController {
                 .build();
     }
 
-    @PutMapping("/employer/applications/{id}/accept")
+    @PutMapping("/employer/{id}/accept")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ApiResponse<ApplicationResponse> accept(@PathVariable Long id) {
         return ApiResponse.<ApplicationResponse>builder()
@@ -37,7 +38,7 @@ public class ApplicationController {
                 .build();
     }
 
-    @PutMapping("/employer/applications/{id}/reject")
+    @PutMapping("/employer/{id}/reject")
     @PreAuthorize("hasRole('EMPLOYER')")
     public ApiResponse<ApplicationResponse> reject(@PathVariable Long id) {
         return ApiResponse.<ApplicationResponse>builder()
@@ -46,15 +47,14 @@ public class ApplicationController {
     }
 
     // --- API for APPLICATION JOB (Student) ---
-
-    @PostMapping("/application")
+    @PostMapping
     public ApiResponse<ApplicationResponse> applyJob(@RequestBody ApplyJobRequest request){
         return ApiResponse.<ApplicationResponse>builder()
                 .result(applicationJobService.applyJob(request))
                 .build();
     }
 
-    @DeleteMapping("/application")
+    @DeleteMapping
     public ApiResponse<String> deleteApplyJob(@RequestParam long applicationId){
         applicationJobService.deleteApplicationJob(applicationId);
         return ApiResponse.<String>builder()
@@ -62,7 +62,7 @@ public class ApplicationController {
                 .build();
     }
 
-    @PutMapping("/application")
+    @PutMapping
     public ApiResponse<ApplicationResponse> changeStatusApplyJob(@RequestBody ApplyJobUpdateRequest request){
         return ApiResponse.<ApplicationResponse>builder()
                 .result(applicationJobService.changeStatus(request))

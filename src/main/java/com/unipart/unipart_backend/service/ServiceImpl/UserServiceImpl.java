@@ -210,11 +210,22 @@ public class UserServiceImpl implements UserService {
     }
     public EmployerResponse updateProfileEmployer(EmployerUpdateRequest request) {
         User user = getCurrentUser();
-        Employer employer = employerRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy thông tin nhà tuyển dụng"));
-        User u = userRepository.findByPhoneNumber(request.getPhoneNumber());
-        if(!u.getId().equals(user.getId())) {
-            throw new AppException(ErrorCode.EXIST_PHONE);
+        Employer employer = employerRepository.findByUser(user);
+        if (employer == null) {
+            throw new RuntimeException("Không tìm thấy thông tin nhà tuyển dụng");
+        }
+        // Chỉ kiểm tra trùng SĐT nếu có nhập và khác SĐT hiện tại
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
+            User u = userRepository.findByPhoneNumber(request.getPhoneNumber());
+            if (u != null && !u.getId().equals(user.getId())) {
+                throw new AppException(ErrorCode.EXIST_PHONE);
+            }
+        }
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            User uEmail = userRepository.findByEmail(request.getEmail()).orElse(null);
+            if (uEmail != null && !uEmail.getId().equals(user.getId())) {
+                throw new AppException(ErrorCode.EMAIL_EXISTED);
+            }
         }
         employerMapper.updateUserFromRequest(request, user);
         user.setUpdatedAt(LocalDateTime.now());

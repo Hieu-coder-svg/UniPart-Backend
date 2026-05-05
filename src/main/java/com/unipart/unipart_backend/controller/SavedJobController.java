@@ -27,6 +27,7 @@ public class SavedJobController {
 
     @DeleteMapping("/{jobId}")
     public ApiResponse<String> unsaveJob(@PathVariable Long jobId) {
+        savedJobService.unsaveJob(jobId);
         return ApiResponse.<String>builder()
                 .result("success")
                 .build();

@@ -14,6 +14,7 @@ import java.time.LocalDate;
 @Builder
  public class EmployerUpdateRequest {
     private String fullName;
+    private String email;
     private LocalDate dateOfBirth;
     private String phoneNumber;
     private String gender;

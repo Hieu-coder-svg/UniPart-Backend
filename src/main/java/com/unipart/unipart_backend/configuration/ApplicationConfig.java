@@ -41,6 +41,18 @@ public class ApplicationConfig {
             Role employerRole = roleRepository.findByName("EMPLOYER")
                     .orElseGet(() -> roleRepository.save(Role.builder().name("EMPLOYER").build()));
 
+            if(userRepository.findByUsername("admin").isEmpty()){
+                User u = User.builder()
+                        .username("admin")
+                        .email("admin@unipart.vn")
+                        .fullName("Administrator")
+                        .passwordHash(passwordEncoder.encode("Admin123"))
+                        .role(adminRole)
+                        .isActived(true)
+                        .isBlocked(false)
+                        .build();
+                userRepository.save(u);
+            }
             if (userRepository.findByUsername("student").isEmpty()) {
                 User u = User.builder()
                         .username("student")

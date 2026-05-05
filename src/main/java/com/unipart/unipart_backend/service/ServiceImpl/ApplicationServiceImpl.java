@@ -43,6 +43,25 @@ public class ApplicationServiceImpl implements ApplicationService {
         return authentication.getName();
     }
 
+    private ApplicationResponse toDTO(Application a) {
+        var student = a.getStudent();
+        var user = student.getUser();
+        return ApplicationResponse.builder()
+                .id(a.getId())
+                .jobId(a.getJob().getId())
+                .jobTitle(a.getJob().getTitle())
+                .studentId(student.getId())
+                .studentName(user.getFullName())
+                .studentEmail(user.getEmail())
+                .studentPhone(user.getPhoneNumber())
+                .studentUniversity(student.getUniversity())
+                .studentMajor(student.getMajor())
+                .status(a.getStatus().name())
+                .appliedAt(a.getAppliedAt())
+                .completedAt(a.getCompletedAt())
+                .build();
+    }
+
     // ===== GET ALL =====
     @Override
     public List<ApplicationResponse> getEmployerApplications() {
