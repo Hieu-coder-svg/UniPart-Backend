@@ -37,6 +37,7 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
     private final ApplicationJobRepository applicationJobRepository;
     private final ApplicationMapper applicationMapper;
     private final StudentRepository studentRepository;
+    private final EmployerRepository employerRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;

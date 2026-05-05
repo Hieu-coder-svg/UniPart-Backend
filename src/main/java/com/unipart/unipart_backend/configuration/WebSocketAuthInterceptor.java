@@ -1,59 +1,50 @@
 package com.unipart.unipart_backend.configuration;
 
+import com.unipart.unipart_backend.service.AuthenticationService;
+import com.unipart.unipart_backend.dto.request.IntrospectRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.simp.stomp.StompCommand;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
-@Slf4j
-public class WebSocketAuthInterceptor implements ChannelInterceptor {
+public class WebSocketAuthInterceptor implements HandshakeInterceptor {
 
     private final CustomJwtDecoder customJwtDecoder;
 
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        StompHeaderAccessor accessor =
-                MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-
-        if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                                   WebSocketHandler wsHandler, Map<String, Object> attributes) {
+        if (request instanceof ServletServerHttpRequest servletRequest) {
+            String token = servletRequest.getServletRequest().getParameter("token");
+            if (token != null && !token.isBlank()) {
                 try {
                     Jwt jwt = customJwtDecoder.decode(token);
-                    String username = jwt.getSubject();
-
-                    List<String> roles = jwt.getClaimAsStringList("roles");
-                    List<SimpleGrantedAuthority> authorities = List.of();
-                    if (roles != null) {
-                        authorities = roles.stream()
-                                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.replace("ROLE_", "")))
-                                .collect(Collectors.toList());
-                    }
-
-                    UsernamePasswordAuthenticationToken auth =
-                            new UsernamePasswordAuthenticationToken(username, null, authorities);
-                    accessor.setUser(auth);
-                    log.info("WebSocket authenticated: {}", username);
+                    String userId = jwt.getClaimAsString("userId");
+                    String scope = jwt.getClaimAsString("scope");
+                    attributes.put("userId", userId);
+                    attributes.put("userRole", scope);
+                    log.debug("WebSocket auth OK: userId={}, role={}", userId, scope);
                 } catch (Exception e) {
-                    log.warn("WebSocket auth failed: {}", e.getMessage());
+                    log.warn("WebSocket invalid token: {}", e.getMessage());
+                    // Connect vẫn được phép nhưng userId = null → chỉ đọc, không write
                 }
             }
         }
-        return message;
+        return true; // luôn cho connect (public read)
+    }
+
+    @Override
+    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
+                               WebSocketHandler wsHandler, Exception exception) {
     }
 }

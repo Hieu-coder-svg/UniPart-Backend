@@ -1,6 +1,11 @@
 package com.unipart.unipart_backend.entity;
+
+import com.unipart.unipart_backend.enums.ReportStatus;
+import com.unipart.unipart_backend.enums.ReportTargetType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,25 +34,41 @@ public class Report {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reporter_id", length = 50)
+    @Column(name = "reporter_id", length = 50, nullable = false)
     private String reporterId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id", insertable = false, updatable = false)
     private User reporter;
 
-    @Column(name = "target_type", length = 50)
-    private String targetType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", length = 50, nullable = false)
+    private ReportTargetType targetType;
 
-    @Column(name = "target_id", length = 50)
+    @Column(name = "target_id", length = 50, nullable = false)
     private String targetId;
 
-    @Column(name = "reason", columnDefinition = "TEXT")
+    @Column(name = "reason", columnDefinition = "TEXT", nullable = false)
     private String reason;
 
-    @Column(name = "status", length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50, nullable = false)
+    @Builder.Default
+    private ReportStatus status = ReportStatus.PENDING;
 
-    @Column(name = "created_at")
+    @Column(name = "admin_note", columnDefinition = "TEXT")
+    private String adminNote;
+
+    @Column(name = "resolved_by", length = 50)
+    private String resolvedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by", insertable = false, updatable = false)
+    private User resolver;
+
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

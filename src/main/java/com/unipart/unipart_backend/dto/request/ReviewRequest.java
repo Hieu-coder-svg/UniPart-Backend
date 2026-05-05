@@ -1,0 +1,21 @@
+package com.unipart.unipart_backend.dto.request;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ReviewRequest {
+    Long jobId;
+    String studentId;   // dùng cho employer review
+    String employerId;  // dùng cho student review
+    Integer rating;
+    String comment;
+}
