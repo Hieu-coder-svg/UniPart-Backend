@@ -76,6 +76,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequest request){
         var user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXIST));
+                
+        if (Boolean.TRUE.equals(user.getIsBlocked())) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        if (Boolean.FALSE.equals(user.getIsActived())) {
+            throw new AppException(ErrorCode.USER_NOT_ACTIVED);
+        }
+        
+
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         boolean authenticated = passwordEncoder.matches(request.getPassword(),user.getPasswordHash());
         if(!authenticated){
@@ -116,6 +126,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         var username = signedJWT.getJWTClaimsSet().getSubject();
         var user = userRepository.findByUsername(username)
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXIST));
+
+        if (Boolean.TRUE.equals(user.getIsBlocked())) {
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
 
         var token = generateToken(user);
         return AuthenticationResponse.builder()

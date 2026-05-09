@@ -29,6 +29,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -87,7 +88,7 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
     public void deleteApplicationJob(Long id) {
         Application application = applicationJobRepository.findById(id)
                 .orElseThrow();
-        if(!Objects.equals(application.getStatus(), "PENDING")){
+        if (application.getStatus() != ApplicationStatus.PENDING) {
             throw new AppException(ErrorCode.REMOVE_APPLICATION);
         }
         Student student = application.getStudent();
@@ -96,13 +97,32 @@ public class ApplicationJobServiceImpl implements ApplicationJobService {
         NotificationCreationRequest requestNotification = NotificationCreationRequest.builder()
                 .userId(job.getEmployerId())
                 .title("Hủy ứng tuyển công việc")
-                .content("Sinh viên " + student.getUser().getFullName() + " đã hủy công việc này")
+                .content("Sinh viên " + student.getUser().getFullName() + " đã hủy công việc "+job.getTitle())
                 .build();
 
         notificationService.createNotification(requestNotification);
         applicationJobRepository.delete(application);
     }
+    public List<ApplicationResponse> getStudentApplications() {
+        // 1. Lấy Student đang đăng nhập (để có ID chuẩn dạng UUID)
+        Student student = getCurrentStudent();
 
+        // 2. Tìm trong database bằng student.getId()
+        List<Application> applications = applicationRepository.findByStudentId(student.getId());
+
+        // 3. Chuyển đổi (Map) Entity sang DTO (ApplicationResponse)
+        return applications.stream().map(app -> {
+            return ApplicationResponse.builder()
+                    .id(app.getId())
+                    .jobId(app.getJob().getId())
+                    .jobTitle(app.getJob().getTitle())
+                    .studentId(app.getStudent().getId())
+                    .status(app.getStatus().name())
+                    .appliedAt(app.getAppliedAt()) // Đây chính là trường quan trọng để frontend lấy ngày!
+                    .completedAt(app.getCompletedAt())
+                    .build();
+        }).toList();
+    }
     @Override
     @PreAuthorize("hasRole('EMPLOYER')")
     public ApplicationResponse changeStatus(ApplyJobUpdateRequest request) {

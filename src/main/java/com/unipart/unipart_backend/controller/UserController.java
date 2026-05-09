@@ -68,4 +68,15 @@ public class UserController {
                 .build() ;
     }
 
+    @PutMapping("/{id}/block")
+    ApiResponse<Void> blockUser(@PathVariable String id) {
+        userService.blockUser(id);
+        return ApiResponse.<Void>builder().build();
+    }
+
+    @PutMapping("/{id}/unblock")
+    ApiResponse<Void> unblockUser(@PathVariable String id) {
+        userService.unblockUser(id);
+        return ApiResponse.<Void>builder().build();
+    }
 }

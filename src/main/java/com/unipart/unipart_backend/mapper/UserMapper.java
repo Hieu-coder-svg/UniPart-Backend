@@ -24,6 +24,7 @@ public interface UserMapper {
     User toUserEntity(StudentRegistrationRequest request);
 
     void updateUserFromRequest(StudentUpdateRequest request, @MappingTarget User user);
+    @Mapping(source = "role.name", target = "roleName")
     UserResponse toUserResponse(User user);
     List<UserResponse> toUserResponseList(List<User> users);
 }

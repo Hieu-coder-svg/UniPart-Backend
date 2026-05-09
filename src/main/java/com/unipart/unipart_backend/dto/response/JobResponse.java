@@ -31,4 +31,5 @@ public class JobResponse {
     private LocalDateTime expiredAt;
     private List<JobTimeSlotResponse> timeSlots;
 private String status;
+    private Long applicationId;
 }

@@ -168,6 +168,7 @@ public class JobServiceImpl implements JobService {
                     Job job = application.getJob();
                     JobResponse jobResponse = jobMapper.toJobResponse(job);
                     jobResponse.setStatus(application.getStatus().name());
+                    jobResponse.setApplicationId(application.getId());
                     return jobResponse;
                 })
                 .collect(Collectors.toList());
