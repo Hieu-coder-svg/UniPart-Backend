@@ -27,4 +27,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
         WHERE j.employerId = :employerId
     """)
     List<Application> findAllByEmployerIdWithDetails(String employerId);
+
+    List<Application> findByStudentId(String studentId);
 }

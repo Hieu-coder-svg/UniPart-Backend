@@ -68,4 +68,14 @@ public class ApplicationController {
                 .result(applicationJobService.changeStatus(request))
                 .build();
     }
+    @GetMapping
+    public ApiResponse<List<ApplicationResponse>> getStudentApplications() {
+        List<ApplicationResponse> result = applicationJobService.getStudentApplications();
+        return ApiResponse.<List<ApplicationResponse>>builder()
+                .code(1000) // Code thành công (tùy theo chuẩn project của bạn)
+                .message("Thành công")
+                .result(result)
+                .build();
+    }
+
 }

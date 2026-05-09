@@ -257,4 +257,26 @@ public class UserServiceImpl implements UserService {
         var employer = employerRepository.findByUser(user);
         return employerMapper.toEmployerResponse(employer);
     }
+    
+    @PreAuthorize("hasRole('ADMIN')")
+    public void blockUser(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        user.setIsBlocked(true);
+        userRepository.save(user);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public void unblockUser(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        user.setIsBlocked(false);
+        userRepository.save(user);
+    }
+
+    public String getEmailByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        return user.getEmail();
+    }
 }
