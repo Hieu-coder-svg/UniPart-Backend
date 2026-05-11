@@ -11,4 +11,6 @@ public interface ApplicationService {
     ApplicationResponse acceptApplication(Long id);
 
     ApplicationResponse rejectApplication(Long id);
+
+    ApplicationResponse completeApplication(Long id);
 }

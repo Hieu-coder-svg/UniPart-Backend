@@ -46,6 +46,14 @@ public class ApplicationController {
                 .build();
     }
 
+    @PutMapping("/employer/{id}/complete")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<ApplicationResponse> complete(@PathVariable Long id) {
+        return ApiResponse.<ApplicationResponse>builder()
+                .result(applicationService.completeApplication(id))
+                .build();
+    }
+
     // --- API for APPLICATION JOB (Student) ---
     @PostMapping
     public ApiResponse<ApplicationResponse> applyJob(@RequestBody ApplyJobRequest request){

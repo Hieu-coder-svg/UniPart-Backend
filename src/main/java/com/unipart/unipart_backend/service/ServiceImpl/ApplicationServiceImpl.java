@@ -106,7 +106,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         //Accept
         app.setStatus(ApplicationStatus.ACCEPTED);
-        app.setCompletedAt(LocalDateTime.now());
+        // completedAt chỉ set khi COMPLETED, không phải ACCEPTED
         applicationRepository.save(app);
 
         //Auto-close job khi đủ vacancies
@@ -139,6 +139,33 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         app.setStatus(ApplicationStatus.REJECTED);
+        app.setCompletedAt(LocalDateTime.now());
+        applicationRepository.save(app);
+
+        return applicationMapper.toResponse(app);
+    }
+
+    // ===== COMPLETE =====
+    @Override
+    @Transactional
+    public ApplicationResponse completeApplication(Long id) {
+
+        Application app = applicationRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        String currentUserId = getCurrentUserId();
+
+        // Kiểm tra quyền sở hữu
+        if (!app.getJob().getEmployerId().equals(currentUserId)) {
+            throw new AppException(ErrorCode.APPLICATION_FORBIDDEN);
+        }
+
+        // Chỉ cho phép chuyển từ ACCEPTED sang COMPLETED
+        if (app.getStatus() != ApplicationStatus.ACCEPTED) {
+            throw new AppException(ErrorCode.APPLICATION_CANNOT_COMPLETE);
+        }
+
+        app.setStatus(ApplicationStatus.COMPLETED);
         app.setCompletedAt(LocalDateTime.now());
         applicationRepository.save(app);
 

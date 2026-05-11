@@ -42,10 +42,10 @@ public class PurchaseController {
 
     /**
      * VNPay gọi callback sau khi user thanh toán xong.
-     * GET /payment/vnpay-return
+     * GET /home/payment/vnpay-return
      * (Public — không cần JWT vì VNPay gọi thẳng)
      */
-    @GetMapping("/payment/vnpay-return")
+    @GetMapping("/home/payment/vnpay-return")
     public void vnpayReturn(
             @RequestParam Map<String, String> params,
             HttpServletResponse response) throws IOException {
