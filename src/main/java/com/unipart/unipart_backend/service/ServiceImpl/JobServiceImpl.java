@@ -30,6 +30,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE,makeFinal=true)
 @Service
+@Transactional
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;
@@ -82,7 +84,9 @@ public class JobServiceImpl implements JobService {
         jobMapper.updateJobFromRequest(request, job);
 
         if (request.getTimeSlots() != null) {
-            jobTimeSlotRepository.deleteByJobId(jobId);
+            // Fix: Don't re-assign the collection because of orphanRemoval = true
+            job.getJobTimeSlots().clear();
+            
             List<JobTimeSlot> newTimeSlots = request.getTimeSlots().stream()
                     .map(slotRequest -> {
                         JobTimeSlot slot = jobMapper.toTimeSlotEntity(slotRequest);
@@ -91,8 +95,8 @@ public class JobServiceImpl implements JobService {
                         return slot;
                     })
                     .collect(Collectors.toList());
-            jobTimeSlotRepository.saveAll(newTimeSlots);
-            job.setJobTimeSlots(new java.util.HashSet<>(newTimeSlots));
+            
+            job.getJobTimeSlots().addAll(newTimeSlots);
         }
 
         return jobMapper.toJobResponse(jobRepository.save(job));

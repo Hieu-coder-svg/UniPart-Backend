@@ -166,9 +166,10 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasRole('STUDENT')")
     public StudentResponse updateProfileStudent(StudentUpdateRequest request) {
         User user = getCurrentUser();
-        User u = userRepository.findByPhoneNumber(request.getPhoneNumber());
-        if(u!=null&&!u.getId().equals(user.getId())) {
-            throw new AppException(ErrorCode.EXIST_PHONE);
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
+            if (userRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), user.getId())) {
+                throw new AppException(ErrorCode.EXIST_PHONE);
+            }
         }
         userMapper.updateUserFromRequest(request, user);
         userRepository.save(user);
@@ -216,8 +217,7 @@ public class UserServiceImpl implements UserService {
         }
         // Chỉ kiểm tra trùng SĐT nếu có nhập và khác SĐT hiện tại
         if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
-            User u = userRepository.findByPhoneNumber(request.getPhoneNumber());
-            if (u != null && !u.getId().equals(user.getId())) {
+            if (userRepository.existsByPhoneNumberAndIdNot(request.getPhoneNumber(), user.getId())) {
                 throw new AppException(ErrorCode.EXIST_PHONE);
             }
         }
