@@ -130,7 +130,8 @@ public class PurchaseServiceImpl implements PurchaseService {
 
             log.info("Thanh toán thành công txnRef={}", txnRef);
             return vnPayConfig.getFrontendSuccessUrl()
-                    + "?txnRef=" + txnRef
+                    + "?success=true"
+                    + "&txnRef=" + txnRef
                     + "&packageId=" + purchase.getPackageId();
         } else {
             // Thanh toán thất bại

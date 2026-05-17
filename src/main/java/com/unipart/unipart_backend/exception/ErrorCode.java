@@ -35,6 +35,7 @@ public enum ErrorCode {
     APPLICATION_ALREADY_PROCESSED(2002, "The application has already been processed", HttpStatus.CONFLICT),
     JOB_IS_FULL(2003, "The job is full", HttpStatus.CONFLICT),
     APPLICATION_FORBIDDEN(2004, "You do not have permission to work with this application", HttpStatus.FORBIDDEN),
+    APPLICATION_CANNOT_COMPLETE(2005, "Only accepted applications can be marked as completed", HttpStatus.CONFLICT),
     // Package
     PACKAGE_NOT_FOUND(3001, "Package does not exist", HttpStatus.NOT_FOUND),
     EMPLOYER_NOT_FOUND(3002, "Employer does not exist", HttpStatus.NOT_FOUND),
