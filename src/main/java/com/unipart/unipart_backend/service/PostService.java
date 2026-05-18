@@ -15,7 +15,8 @@ public interface PostService {
     Page<PostResponse> getByUser(String userId, Pageable pageable, String currentUserId);
     PostResponse getById(Long id, String currentUserId);
     Page<PostResponse> search(String keyword, Pageable pageable, String currentUserId);
-    int likeToggle(Long postId, String userId);
+    boolean likeToggle(Long postId, String userId);
     boolean isLikedByUser(Long postId, String userId);
+    Integer getLikesCount(Long postId);
     PostResponse share(Long postId);
 }

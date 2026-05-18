@@ -28,6 +28,9 @@ public class Post {
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(name = "category_id")
     private Long categoryId;
 
@@ -59,6 +62,10 @@ public class Post {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "is_hide")
+    @Builder.Default
+    private Boolean isHide = false;
 
     @PrePersist
     public void onCreate() {

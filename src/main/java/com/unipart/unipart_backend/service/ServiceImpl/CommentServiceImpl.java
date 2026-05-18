@@ -30,6 +30,7 @@ public class CommentServiceImpl implements CommentService {
                 .userId(c.getUserId())
                 .authorName(authorName)
                 .content(c.getContent())
+                .imageUrl(c.getImageUrl())
                 .parentCommentId(c.getParentCommentId())
                 .createdAt(c.getCreatedAt())
                 .build();
@@ -54,6 +55,7 @@ public class CommentServiceImpl implements CommentService {
                 .postId(request.getPostId())
                 .userId(userId)
                 .content(request.getContent())
+                .imageUrl(request.getImageUrl())
                 .parentCommentId(request.getParentCommentId())
                 .build();
 
@@ -71,19 +73,10 @@ public class CommentServiceImpl implements CommentService {
         if (!postRepository.existsById(postId)) {
             throw new AppException(ErrorCode.POST_NOT_FOUND);
         }
-        // Lấy top-level comments
-        List<Comment> roots = commentRepository
-                .findByPostIdAndParentCommentIdIsNullOrderByCreatedAtAsc(postId);
-
-        return roots.stream().map(root -> {
-            CommentResponse dto = toDTO(root);
-            // Gắn replies
-            List<CommentResponse> replies = commentRepository
-                    .findByParentCommentIdOrderByCreatedAtAsc(root.getId())
-                    .stream().map(this::toDTO).toList();
-            dto.setReplies(replies);
-            return dto;
-        }).toList();
+        // Lấy tất cả comments (flatten - bao gồm cả replies)
+        return commentRepository
+                .findByPostIdOrderByCreatedAtAsc(postId)
+                .stream().map(this::toDTO).toList();
     }
 
     @Override

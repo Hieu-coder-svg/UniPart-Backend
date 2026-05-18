@@ -48,6 +48,14 @@ public class UserController {
                 .result(userService.getStudentMyInfo())
                 .build() ;
     }
+
+    @GetMapping("/student/{id}")
+    ApiResponse<StudentResponse> getStudentById(@PathVariable String id){
+        return ApiResponse.<StudentResponse> builder()
+                .result(userService.getStudentById(id))
+                .build() ;
+    }
+
     @PostMapping("/myEmployerInfo")
     ApiResponse<EmployerResponse> updateProfileEmployer(@RequestBody EmployerUpdateRequest request){
         ApiResponse<EmployerResponse> apiResponse = new ApiResponse<>();

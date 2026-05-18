@@ -11,9 +11,12 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface StudentMapper {
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "user", ignore = true)           // Sẽ gán sau khi save User
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     Student toStudentEntity(StudentRegistrationRequest request);
+    
     void updateStudentFromRequest(StudentUpdateRequest request, @MappingTarget Student student);
+    
     @Mapping(target = "id", source = "student.user.id")
     @Mapping(target = "username", source = "student.user.username")
     @Mapping(target = "email", source = "student.user.email")
@@ -32,5 +35,9 @@ public interface StudentMapper {
     @Mapping(target = "address", source = "student.address")
     @Mapping(target = "latitude", source = "student.latitude")
     @Mapping(target = "longitude", source = "student.longitude")
+    @Mapping(target = "bio", source = "student.bio")
+    @Mapping(target = "skills", source = "student.skills")
+    @Mapping(target = "experience", source = "student.experience")
+    @Mapping(target = "cvUrl", source = "student.cvUrl")
     StudentResponse toStudentResponse(Student student);
 }

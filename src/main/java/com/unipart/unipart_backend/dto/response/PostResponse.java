@@ -18,11 +18,13 @@ public class PostResponse {
     Long categoryId;
     String categoryName;
     String content;
+    String imageUrl;
     Long relatedJobId;
     Integer likesCount;
     Integer commentsCount;
     Integer sharesCount;
     Boolean isLikedByMe;
+    Boolean isHide;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

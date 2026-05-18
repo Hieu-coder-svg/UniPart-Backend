@@ -32,4 +32,9 @@ public class StudentResponse {
     private String address;
     private Double latitude;
     private Double longitude;
+
+    private String bio;
+    private String skills;
+    private String experience;
+    private String cvUrl;
 }

@@ -1,5 +1,6 @@
 package com.unipart.unipart_backend.service.ServiceImpl;
 
+import com.unipart.unipart_backend.dto.request.NotificationCreationRequest;
 import com.unipart.unipart_backend.dto.request.ReportRequest;
 import com.unipart.unipart_backend.dto.request.ReportUpdateRequest;
 import com.unipart.unipart_backend.dto.response.ReportResponse;
@@ -14,6 +15,7 @@ import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.repository.ReportRepository;
 import com.unipart.unipart_backend.repository.ReviewRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.NotificationService;
 import com.unipart.unipart_backend.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,12 +35,10 @@ public class ReportServiceImpl implements ReportService {
     private final JobRepository jobRepository;
     private final ReviewRepository reviewRepository;
     private final ReportMapper reportMapper;
+    private final NotificationService notificationService;
 
     // ===== Helper =====
 
-    /**
-     * Lấy userId (UUID) từ JWT claim "userId".
-     */
     private String getCurrentUserId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getPrincipal() instanceof Jwt jwt) {
@@ -47,9 +47,6 @@ public class ReportServiceImpl implements ReportService {
         return authentication.getName();
     }
 
-    /**
-     * Kiểm tra xem target có tồn tại trong hệ thống hay không.
-     */
     private void validateTargetExists(ReportTargetType targetType, String targetId) {
         switch (targetType) {
             case USER -> {
@@ -69,9 +66,8 @@ public class ReportServiceImpl implements ReportService {
                     throw new AppException(ErrorCode.REPORT_TARGET_NOT_FOUND);
                 }
             }
-            // POST, COMMENT — sẽ validate khi có repository tương ứng
             default -> {
-                // Cho phép gửi report; admin sẽ xác minh thủ công
+                // POST, COMMENT — admin sẽ xác minh thủ công
             }
         }
     }
@@ -81,6 +77,21 @@ public class ReportServiceImpl implements ReportService {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
             throw new AppException(ErrorCode.REPORT_INVALID_TARGET_ID);
+        }
+    }
+
+    private void sendNotification(String userId, String title, String content) {
+        if (userId == null) return;
+        try {
+            notificationService.createNotification(
+                    NotificationCreationRequest.builder()
+                            .userId(userId)
+                            .title(title)
+                            .content(content)
+                            .build()
+            );
+        } catch (Exception e) {
+            System.err.println("[ReportService] Failed to send notification: " + e.getMessage());
         }
     }
 
@@ -98,13 +109,12 @@ public class ReportServiceImpl implements ReportService {
             throw new AppException(ErrorCode.REPORT_SELF_FORBIDDEN);
         }
 
-        // Kiểm tra trùng lặp: 1 user chỉ report 1 target 1 lần
+        // Kiểm tra trùng lặp
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(
                 userId, request.getTargetType(), request.getTargetId())) {
             throw new AppException(ErrorCode.REPORT_ALREADY_EXISTS);
         }
 
-        // Kiểm tra target tồn tại
         validateTargetExists(request.getTargetType(), request.getTargetId());
 
         Report report = Report.builder()
@@ -112,13 +122,22 @@ public class ReportServiceImpl implements ReportService {
                 .targetType(request.getTargetType())
                 .targetId(request.getTargetId())
                 .reason(request.getReason())
+                .evidenceUrl(request.getEvidenceUrl())
                 .status(ReportStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         reportRepository.save(report);
 
-        // Fetch reporter to populate reporterName in response
+        // Gửi notification cho tất cả ADMIN
+        List<User> admins = userRepository.findByRole_Name("ADMIN");
+        for (User admin : admins) {
+            sendNotification(admin.getId(),
+                    "📢 Báo cáo vi phạm mới",
+                    "Có một báo cáo mới về " + request.getTargetType().name().toLowerCase()
+                            + " cần được xem xét. Lý do: " + request.getReason());
+        }
+
         User reporter = userRepository.findById(userId).orElse(null);
         ReportResponse response = reportMapper.toResponse(report);
         if (reporter != null) {
@@ -132,7 +151,6 @@ public class ReportServiceImpl implements ReportService {
     public List<ReportResponse> getMyReports() {
         String userId = getCurrentUserId();
         if (userId == null) throw new AppException(ErrorCode.UNAUTHENTICATED);
-
         return reportMapper.toResponseList(
                 reportRepository.findByReporterIdOrderByCreatedAtDesc(userId));
     }
@@ -174,8 +192,26 @@ public class ReportServiceImpl implements ReportService {
         report.setAdminNote(request.getAdminNote());
         report.setResolvedBy(adminId);
         report.setUpdatedAt(LocalDateTime.now());
-
         reportRepository.save(report);
+
+        // Gửi notification sau khi giải quyết
+        if (request.getStatus() == ReportStatus.RESOLVED || request.getStatus() == ReportStatus.REJECTED) {
+            String statusLabel = request.getStatus() == ReportStatus.RESOLVED ? "Đã giải quyết" : "Bị từ chối";
+
+            // → Người báo cáo
+            sendNotification(report.getReporterId(),
+                    "Báo cáo của bạn đã được xử lý",
+                    "Báo cáo #" + reportId + " của bạn có trạng thái: " + statusLabel
+                            + (request.getAdminNote() != null && !request.getAdminNote().isBlank()
+                            ? ". Ghi chú: " + request.getAdminNote() : ""));
+
+            // → Người bị báo cáo (chỉ khi targetType là USER)
+            if (report.getTargetType() == ReportTargetType.USER) {
+                sendNotification(report.getTargetId(),
+                        "Thông báo từ quản trị viên",
+                        "Tài khoản của bạn đã bị báo cáo. Báo cáo đã được xử lý với trạng thái: " + statusLabel);
+            }
+        }
 
         return reportMapper.toResponse(report);
     }

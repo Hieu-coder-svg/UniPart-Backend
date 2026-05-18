@@ -178,4 +178,16 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewMapper.toResponseList(
                 reviewRepository.findByStudentIdAndReviewType(studentId, ReviewType.EMPLOYER_TO_STUDENT));
     }
+
+    @Override
+    public List<ReviewResponse> getReviewsWrittenByStudent(String studentId) {
+        return reviewMapper.toResponseList(
+                reviewRepository.findByStudentIdAndReviewType(studentId, ReviewType.STUDENT_TO_EMPLOYER));
+    }
+
+    @Override
+    public List<ReviewResponse> getReviewsWrittenByEmployer(String employerId) {
+        return reviewMapper.toResponseList(
+                reviewRepository.findByEmployerIdAndReviewType(employerId, ReviewType.EMPLOYER_TO_STUDENT));
+    }
 }

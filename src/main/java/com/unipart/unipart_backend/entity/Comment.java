@@ -35,6 +35,9 @@ public class Comment {
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(name = "parent_comment_id")
     private Long parentCommentId;
 

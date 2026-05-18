@@ -53,4 +53,18 @@ public class ReviewController {
                 .result(reviewService.getStudentReviews(id))
                 .build();
     }
+
+    @GetMapping("/written-by-student/{id}")
+    public ApiResponse<List<ReviewResponse>> getWrittenByStudent(@PathVariable String id) {
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .result(reviewService.getReviewsWrittenByStudent(id))
+                .build();
+    }
+
+    @GetMapping("/written-by-employer/{id}")
+    public ApiResponse<List<ReviewResponse>> getWrittenByEmployer(@PathVariable String id) {
+        return ApiResponse.<List<ReviewResponse>>builder()
+                .result(reviewService.getReviewsWrittenByEmployer(id))
+                .build();
+    }
 }

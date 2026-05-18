@@ -21,4 +21,6 @@ public class PurchasePackageResponse {
     private LocalDateTime startDate;
     private LocalDateTime endDate;      // null nếu gói TIN
     private Integer tinsPurchased;      // null nếu gói MONTHLY
+    private LocalDateTime paymentDeadline;
+    private Boolean isExpired;          // true nếu quá hạn thanh toán
 }

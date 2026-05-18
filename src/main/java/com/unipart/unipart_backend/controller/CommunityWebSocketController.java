@@ -125,7 +125,8 @@ public class CommunityWebSocketController {
             return;
         }
 
-        int newCount = postService.likeToggle(postId, userId);
+        postService.likeToggle(postId, userId);
+        int newCount = postService.getLikesCount(postId);
         boolean liked = postService.isLikedByUser(postId, userId);
 
         LikeBroadcastMessage broadcast = LikeBroadcastMessage.builder()
