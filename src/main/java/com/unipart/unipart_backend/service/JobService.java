@@ -17,4 +17,5 @@ public interface JobService  {
     List<JobResponse> getMyJobPost();
     Page<JobResponse> getAllJobs(JobFilterRequest request);
     List<JobResponse> getStudentJobHistory(String studentId);
+    void incrementViewCount(Long jobId);
 }

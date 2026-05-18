@@ -56,6 +56,11 @@ public class JobController {
                 .result(jobService.getJobDetail(id))
                 .build();
     }
+    @PostMapping("/{id}/view")
+    ApiResponse<Void> incrementViewCount(@PathVariable long id){
+        jobService.incrementViewCount(id);
+        return ApiResponse.<Void>builder().build();
+    }
     @GetMapping("/history/{id}")
     ApiResponse<List<JobResponse>> getJobHistory(@PathVariable String id){
         return ApiResponse.<List<JobResponse>>builder()
