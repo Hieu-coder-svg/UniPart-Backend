@@ -14,6 +14,7 @@ import com.unipart.unipart_backend.service.StudentScheduleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ public class StudentScheduleServiceImpl implements StudentScheduleService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public  StudentScheduleResponse saveFullSchedule(StudentScheduleRequest request) {
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
