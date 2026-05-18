@@ -49,5 +49,6 @@ public class StudentSchedule {
             joinColumns = @JoinColumn(name = "schedule_id"),
             inverseJoinColumns = @JoinColumn(name = "time_slot_id")
     )
+    @Builder.Default
     private Set<TimeSlot> busyTimeSlots = new HashSet<>();
 }

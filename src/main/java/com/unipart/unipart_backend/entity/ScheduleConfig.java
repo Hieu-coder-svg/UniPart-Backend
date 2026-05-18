@@ -13,7 +13,8 @@ import lombok.*;
 public class ScheduleConfig {
 
     @Id
-    private Long id = 1L; // Always use ID 1 for singleton config
+    @Builder.Default
+    private Long id = 1L;
 
     @Column(name = "full_enabled")
     private boolean fullEnabled;

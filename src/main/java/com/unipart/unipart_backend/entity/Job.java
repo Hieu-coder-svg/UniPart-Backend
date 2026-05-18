@@ -87,9 +87,15 @@ public class Job {
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;
 
+    @Column(name = "view_count", columnDefinition = "integer default 0")
+    @Builder.Default
+    private Integer viewCount = 0;
+
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<JobTimeSlot> jobTimeSlots = new HashSet<>();
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Application> applications = new HashSet<>();
 }

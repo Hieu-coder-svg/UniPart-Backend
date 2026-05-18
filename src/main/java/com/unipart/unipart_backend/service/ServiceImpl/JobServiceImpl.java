@@ -107,6 +107,17 @@ public class JobServiceImpl implements JobService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy công việc"));
         return jobMapper.toJobResponse(job);
     }
+
+    public void incrementViewCount(Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy công việc"));
+        if (job.getViewCount() == null) {
+            job.setViewCount(1);
+        } else {
+            job.setViewCount(job.getViewCount() + 1);
+        }
+        jobRepository.save(job);
+    }
     public List<JobResponse> getMyJobPost() {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         var user = userRepository.findByUsername(username).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXIST));

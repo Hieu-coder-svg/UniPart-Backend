@@ -54,7 +54,8 @@ public class NotificationServiceImpl implements NotificationService {
     public List<NotificationResponse> getMyNotifications(){
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
-        User u = userRepository.findByUsername(name).orElseThrow();
+        User u = userRepository.findByUsername(name)
+                .orElseThrow(() -> new com.unipart.unipart_backend.exception.AppException(com.unipart.unipart_backend.exception.ErrorCode.USER_NOT_EXIST));
         List<Notification> list = notificationRepository.findByUserId(u.getId());
         return notificationMapper.toListResponse(list);
     }
