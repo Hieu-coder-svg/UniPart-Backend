@@ -1,8 +1,10 @@
 package com.unipart.unipart_backend.controller;
 
 import com.unipart.unipart_backend.dto.request.PostCreationRequest;
+import com.unipart.unipart_backend.dto.request.PostFilterRequest;
 import com.unipart.unipart_backend.dto.request.PostUpdateRequest;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
+import com.unipart.unipart_backend.dto.response.PostLikeResponse;
 import com.unipart.unipart_backend.dto.response.PostResponse;
 import com.unipart.unipart_backend.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +81,22 @@ public class PostController {
 
     // ===== WRITE (AUTH) =====
 
+    @PostMapping("/filter")
+    public ApiResponse<Page<PostResponse>> filterPosts(@RequestBody PostFilterRequest request) {
+        String userId = getCurrentUserId();
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+
+        Page<PostResponse> result;
+        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+            result = postService.search(request.getKeyword(), pageable, userId);
+        } else if (request.getCategoryId() != null) {
+            result = postService.getByCategory(request.getCategoryId(), pageable, userId);
+        } else {
+            result = postService.getFeed(pageable, userId);
+        }
+        return ApiResponse.<Page<PostResponse>>builder().result(result).build();
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('STUDENT', 'EMPLOYER')")
     public ApiResponse<PostResponse> create(@RequestBody PostCreationRequest request) {
@@ -107,10 +125,15 @@ public class PostController {
 
     @PostMapping("/{id}/like")
     @PreAuthorize("hasAnyRole('STUDENT', 'EMPLOYER')")
-    public ApiResponse<Integer> like(@PathVariable Long id) {
-        return ApiResponse.<Integer>builder()
-                .result(postService.likeToggle(id, getCurrentUserId()))
+    public ApiResponse<PostLikeResponse> like(@PathVariable Long id) {
+        Boolean liked = postService.likeToggle(id, getCurrentUserId());
+        Integer likesCount = postService.getLikesCount(id);
+        PostLikeResponse response = PostLikeResponse.builder()
+                .postId(id)
+                .liked(liked)
+                .likesCount(likesCount)
                 .build();
+        return ApiResponse.<PostLikeResponse>builder().result(response).build();
     }
 
     @PostMapping("/{id}/share")

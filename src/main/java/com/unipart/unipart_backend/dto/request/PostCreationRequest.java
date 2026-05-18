@@ -11,5 +11,6 @@ import lombok.experimental.FieldDefaults;
 public class PostCreationRequest {
     Long categoryId;
     String content;
+    String imageUrl;
     Long relatedJobId; // optional
 }

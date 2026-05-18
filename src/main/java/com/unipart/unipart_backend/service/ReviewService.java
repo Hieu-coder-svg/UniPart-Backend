@@ -14,4 +14,8 @@ public interface ReviewService {
     List<ReviewResponse> getEmployerReviews(String employerId);
 
     List<ReviewResponse> getStudentReviews(String studentId);
+
+    List<ReviewResponse> getReviewsWrittenByStudent(String studentId);
+
+    List<ReviewResponse> getReviewsWrittenByEmployer(String employerId);
 }

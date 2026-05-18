@@ -15,6 +15,8 @@ import com.unipart.unipart_backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.Optional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -55,11 +57,13 @@ public class PostServiceImpl implements PostService {
                 .categoryId(p.getCategoryId())
                 .categoryName(categoryName)
                 .content(p.getContent())
+                .imageUrl(p.getImageUrl())
                 .relatedJobId(p.getRelatedJobId())
                 .likesCount(p.getLikesCount())
                 .commentsCount(p.getCommentsCount())
                 .sharesCount(p.getSharesCount())
                 .isLikedByMe(liked)
+                .isHide(p.getIsHide())
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
                 .build();
@@ -77,6 +81,7 @@ public class PostServiceImpl implements PostService {
                 .userId(userId)
                 .categoryId(request.getCategoryId())
                 .content(request.getContent())
+                .imageUrl(request.getImageUrl())
                 .relatedJobId(request.getRelatedJobId())
                 .build();
         Post saved = postRepository.save(post);
@@ -119,7 +124,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Page<PostResponse> getFeed(Pageable pageable, String currentUserId) {
-        return postRepository.findAllByOrderByCreatedAtDesc(pageable)
+        return postRepository.findAllVisibleOrderByCreatedAtDesc(pageable)
                 .map(p -> toDTO(p, currentUserId));
     }
 
@@ -128,13 +133,13 @@ public class PostServiceImpl implements PostService {
         if (!categoryRepository.existsById(categoryId)) {
             throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
         }
-        return postRepository.findByCategoryIdOrderByCreatedAtDesc(categoryId, pageable)
+        return postRepository.findVisibleByCategoryId(categoryId, pageable)
                 .map(p -> toDTO(p, currentUserId));
     }
 
     @Override
     public Page<PostResponse> getByUser(String userId, Pageable pageable, String currentUserId) {
-        return postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+        return postRepository.findVisibleByUserId(userId, pageable)
                 .map(p -> toDTO(p, currentUserId));
     }
 
@@ -147,7 +152,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Page<PostResponse> search(String keyword, Pageable pageable, String currentUserId) {
-        return postRepository.findByContentContainingIgnoreCaseOrderByCreatedAtDesc(keyword, pageable)
+        return postRepository.findVisibleByKeyword(keyword, pageable)
                 .map(p -> toDTO(p, currentUserId));
     }
 
@@ -155,32 +160,39 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public int likeToggle(Long postId, String userId) {
+    public boolean likeToggle(Long postId, String userId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
-        postLikeRepository.findByPostIdAndUserId(postId, userId).ifPresentOrElse(
-                like -> {
-                    // Already liked → unlike
-                    postLikeRepository.delete(like);
-                    post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
-                },
-                () -> {
-                    // Not liked → like
-                    postLikeRepository.save(PostLike.builder()
-                            .postId(postId)
-                            .userId(userId)
-                            .build());
-                    post.setLikesCount(post.getLikesCount() + 1);
-                }
-        );
-        postRepository.save(post);
-        return post.getLikesCount();
+        Optional<PostLike> existingLike = postLikeRepository.findByPostIdAndUserId(postId, userId);
+        if (existingLike.isPresent()) {
+            // Already liked → unlike
+            postLikeRepository.delete(existingLike.get());
+            post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
+            postRepository.save(post);
+            return false;
+        } else {
+            // Not liked → like
+            postLikeRepository.save(PostLike.builder()
+                    .postId(postId)
+                    .userId(userId)
+                    .build());
+            post.setLikesCount(post.getLikesCount() + 1);
+            postRepository.save(post);
+            return true;
+        }
     }
 
     @Override
     public boolean isLikedByUser(Long postId, String userId) {
         return postLikeRepository.existsByPostIdAndUserId(postId, userId);
+    }
+
+    @Override
+    public Integer getLikesCount(Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        return post.getLikesCount();
     }
 
     // ===== SHARE =====

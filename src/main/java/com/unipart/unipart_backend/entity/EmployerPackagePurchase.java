@@ -65,4 +65,7 @@ public class EmployerPackagePurchase {
 
     @Column(name = "transaction_ref", length = 100)
     private String transactionRef;
+
+    @Column(name = "payment_deadline")
+    private LocalDateTime paymentDeadline;
 }

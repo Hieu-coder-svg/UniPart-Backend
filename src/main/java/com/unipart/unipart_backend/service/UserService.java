@@ -19,6 +19,7 @@ public interface UserService  {
     List<UserResponse> getAll();
     UserResponse findUser(String id);
     StudentResponse getStudentMyInfo();
+    StudentResponse getStudentById(String id);
     StudentResponse updateProfileStudent(StudentUpdateRequest request);
     EmployerResponse registerEmployer(EmployerRegistrationRequest request);
     EmployerResponse updateProfileEmployer(EmployerUpdateRequest request);

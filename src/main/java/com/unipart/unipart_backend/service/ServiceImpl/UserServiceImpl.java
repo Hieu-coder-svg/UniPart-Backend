@@ -251,6 +251,14 @@ public class UserServiceImpl implements UserService {
         Student student = user.getStudent();
         return studentMapper.toStudentResponse(student);
     }
+
+    @PreAuthorize("hasAnyRole('EMPLOYER', 'ADMIN')")
+    public StudentResponse getStudentById(String id){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        Student student = user.getStudent();
+        return studentMapper.toStudentResponse(student);
+    }
     @PreAuthorize("hasRole('EMPLOYER')")
     public EmployerResponse getEmployerMyInfo(){
         User user = getCurrentUser();

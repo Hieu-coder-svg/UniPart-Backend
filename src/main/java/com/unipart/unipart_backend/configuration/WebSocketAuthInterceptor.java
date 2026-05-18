@@ -26,6 +26,12 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
         if (request instanceof ServletServerHttpRequest servletRequest) {
             String token = servletRequest.getServletRequest().getParameter("token");
+            if (token == null || token.isBlank()) {
+                String authHeader = request.getHeaders().getFirst("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    token = authHeader.substring(7);
+                }
+            }
             if (token != null && !token.isBlank()) {
                 try {
                     Jwt jwt = customJwtDecoder.decode(token);
@@ -36,11 +42,10 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                     log.debug("WebSocket auth OK: userId={}, role={}", userId, scope);
                 } catch (Exception e) {
                     log.warn("WebSocket invalid token: {}", e.getMessage());
-                    // Connect vẫn được phép nhưng userId = null → chỉ đọc, không write
                 }
             }
         }
-        return true; // luôn cho connect (public read)
+        return true;
     }
 
     @Override

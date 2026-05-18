@@ -12,4 +12,5 @@ public class CommentRequest {
     Long postId;
     String content;
     Long parentCommentId; // null = comment gốc, có value = reply
+    String imageUrl;
 }

@@ -17,6 +17,7 @@ public class CommentResponse {
     String userId;
     String authorName;
     String content;
+    String imageUrl;
     Long parentCommentId;
     List<CommentResponse> replies;
     LocalDateTime createdAt;

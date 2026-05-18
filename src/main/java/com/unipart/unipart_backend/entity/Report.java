@@ -51,6 +51,9 @@ public class Report {
     @Column(name = "reason", columnDefinition = "TEXT", nullable = false)
     private String reason;
 
+    @Column(name = "evidence_url", columnDefinition = "TEXT")
+    private String evidenceUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50, nullable = false)
     @Builder.Default

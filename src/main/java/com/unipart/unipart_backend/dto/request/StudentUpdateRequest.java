@@ -48,4 +48,9 @@ public class StudentUpdateRequest {
     @Min(value = -180, message = "Kinh độ (Longitude) không hợp lệ")
     @Max(value = 180, message = "Kinh độ (Longitude) không hợp lệ")
     private Double longitude;
+
+    private String bio;
+    private String skills;
+    private String experience;
+    private String cvUrl;
 }
