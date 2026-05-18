@@ -19,6 +19,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.entity.User;
+import org.springframework.beans.factory.annotation.Value;
+import java.io.UnsupportedEncodingException;
+
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +44,11 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final VNPayService vnPayService;
     private final VNPayConfig vnPayConfig;
     private final PurchaseMapper purchaseMapper;
+    private final JavaMailSender mailSender;
+    private final UserRepository userRepository;
+
+    @Value("${spring.mail.username}")
+    private String fromEmail;
 
     // ===== Helper =====
 
@@ -129,6 +143,10 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchaseRepository.save(purchase);
 
             log.info("Thanh toán thành công txnRef={}", txnRef);
+
+            // Gửi email thông báo mua thành công
+            sendPurchaseSuccessEmail(purchase.getEmployerId(), pkg.getName(), purchase.getPricePaid().toString());
+
             return vnPayConfig.getFrontendSuccessUrl()
                     + "?success=true"
                     + "&txnRef=" + txnRef
@@ -142,6 +160,47 @@ public class PurchaseServiceImpl implements PurchaseService {
             return vnPayConfig.getFrontendFailUrl()
                     + "?txnRef=" + txnRef
                     + "&code=" + responseCode;
+        }
+    }
+
+    private void sendPurchaseSuccessEmail(String employerId, String packageName, String price) {
+        try {
+            User user = userRepository.findById(employerId).orElse(null);
+            if (user == null || user.getEmail() == null) {
+                log.warn("Cannot send purchase email: User or email not found for employerId {}", employerId);
+                return;
+            }
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(user.getEmail());
+            helper.setSubject("Xác nhận thanh toán thành công tại Unipart");
+
+            String htmlContent = """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+                    <h2 style="color: #27ae60;">Thanh toán thành công!</h2>
+                    <p>Xin chào <strong>%s</strong>,</p>
+                    <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của Unipart.</p>
+                    <p>Chúng tôi xin thông báo giao dịch mua gói dịch vụ của bạn đã được thực hiện thành công với thông tin như sau:</p>
+                    <ul style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; list-style-type: none;">
+                        <li><strong>Tên gói:</strong> %s</li>
+                        <li><strong>Số tiền thanh toán:</strong> %s VND</li>
+                    </ul>
+                    <p>Gói dịch vụ đã được kích hoạt và sẵn sàng sử dụng.</p>
+                    <p>Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
+                    <hr style="margin: 20px 0;">
+                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>Unipart Team</strong></p>
+                </div>
+                """.formatted(user.getFullName(), packageName, price);
+
+            helper.setText(htmlContent, true);
+            helper.setFrom(fromEmail, "Unipart");
+
+            mailSender.send(message);
+            log.info("Đã gửi email thông báo thanh toán thành công cho user {}", user.getEmail());
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error("Không thể gửi email thanh toán thành công: {}", e.getMessage(), e);
         }
     }
 

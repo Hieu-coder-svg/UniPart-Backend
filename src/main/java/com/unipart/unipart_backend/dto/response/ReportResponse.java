@@ -23,6 +23,7 @@ public class ReportResponse {
     ReportTargetType targetType;
     String targetId;
     String reason;
+    String evidenceUrl;
     ReportStatus status;
     String adminNote;
     String resolvedBy;

@@ -25,4 +25,6 @@ public class ReportRequest {
 
     @NotBlank(message = "Reason is required")
     String reason;
+
+    String evidenceUrl;
 }
