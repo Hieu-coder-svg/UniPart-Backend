@@ -10,7 +10,11 @@ import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.PurchaseMapper;
 import com.unipart.unipart_backend.repository.EmployerPackagePurchaseRepository;
+import com.unipart.unipart_backend.repository.EmployerPostQuotaRepository;
+import com.unipart.unipart_backend.repository.EmployerRepository;
 import com.unipart.unipart_backend.repository.SubscriptionPackageRepository;
+import com.unipart.unipart_backend.entity.EmployerPostQuota;
+import com.unipart.unipart_backend.entity.Employer;
 import com.unipart.unipart_backend.service.PurchaseService;
 import com.unipart.unipart_backend.service.VNPayService;
 import lombok.RequiredArgsConstructor;
@@ -46,21 +50,53 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final PurchaseMapper purchaseMapper;
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
+    private final EmployerPostQuotaRepository employerPostQuotaRepository;
+    private final EmployerRepository employerRepository;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @jakarta.annotation.PostConstruct
+    public void dropUniqueConstraint() {
+        try {
+            // Find the foreign key name
+            String sql = "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE " +
+                         "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'employer_post_quota' " +
+                         "AND COLUMN_NAME = 'employer_id' AND REFERENCED_TABLE_NAME IS NOT NULL";
+            List<String> fkNames = jdbcTemplate.queryForList(sql, String.class);
+            
+            if (!fkNames.isEmpty()) {
+                String fkName = fkNames.get(0);
+                
+                // Drop foreign key
+                jdbcTemplate.execute("ALTER TABLE employer_post_quota DROP FOREIGN KEY " + fkName);
+                
+                // Drop the unique index
+                jdbcTemplate.execute("ALTER TABLE employer_post_quota DROP INDEX employer_id");
+                
+                // Recreate a non-unique index so the foreign key can use it
+                jdbcTemplate.execute("ALTER TABLE employer_post_quota ADD INDEX idx_employer_id (employer_id)");
+                
+                // Re-add the foreign key
+                jdbcTemplate.execute("ALTER TABLE employer_post_quota ADD CONSTRAINT " + fkName + 
+                                     " FOREIGN KEY (employer_id) REFERENCES employer(id)");
+                                     
+                log.info("Successfully dropped unique constraint and recreated foreign key!");
+            }
+        } catch (Exception e) {
+            log.info("Unique constraint setup check completed or already modified: " + e.getMessage());
+        }
+    }
+
     // ===== Helper =====
 
-    /**
-     * Lấy userId (UUID) từ JWT claim "userId", giống pattern trong ApplicationServiceImpl.
-     */
     private String getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            return jwt.getClaimAsString("userId");
-        }
-        return authentication.getName();
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+        return user.getId();
     }
 
     // ===== CREATE PAYMENT URL =====
@@ -143,6 +179,62 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchaseRepository.save(purchase);
 
             log.info("Thanh toán thành công txnRef={}", txnRef);
+
+            // Cập nhật EmployerPostQuota
+            Employer employer = employerRepository.findById(purchase.getEmployerId())
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
+            if (pkg != null) {
+                List<EmployerPostQuota> existingQuotas = employerPostQuotaRepository.findAllByEmployerId(employer.getId());
+
+                if ("PAY_PER_TIN".equals(pkg.getPackageType()) || "ONE_TIME".equals(pkg.getPackageType())) {
+                    String tinType = pkg.getTinType() != null ? pkg.getTinType() : "NORMAL";
+                    Integer qty = pkg.getTinQuantity() != null ? pkg.getTinQuantity() : 1;
+                    
+                    EmployerPostQuota quota = existingQuotas.stream()
+                            .filter(q -> ("TIN".equals(q.getType()) || q.getType() == null) && tinType.equals(q.getQuotaType()))
+                            .findFirst()
+                            .orElse(new EmployerPostQuota());
+
+                    if (quota.getId() == null) {
+                        quota.setEmployer(employer);
+                        quota.setQuotaType(tinType);
+                        quota.setRemainingPosts(qty);
+                        quota.setType("TIN");
+                    } else {
+                        quota.setRemainingPosts(quota.getRemainingPosts() + qty);
+                    }
+                    employerPostQuotaRepository.save(quota);
+
+                } else if ("MONTHLY".equals(pkg.getPackageType())) {
+                    Integer normalQty = pkg.getNormalTinsLimit() != null ? pkg.getNormalTinsLimit() : 0;
+                    Integer maxNormalPerDay = pkg.getMaxNormalTinsPerDay();
+                    
+                    EmployerPostQuota quotaNormal = new EmployerPostQuota();
+                    quotaNormal.setEmployer(employer);
+                    quotaNormal.setQuotaType("NORMAL");
+                    quotaNormal.setRemainingPosts(normalQty);
+                    quotaNormal.setMaxPostsPerDay(maxNormalPerDay);
+                    quotaNormal.setType("MONTHLY");
+                    if (pkg.getDurationDays() != null) {
+                        quotaNormal.setExpiresAt(LocalDateTime.now().plusDays(pkg.getDurationDays()));
+                    }
+                    employerPostQuotaRepository.save(quotaNormal);
+                    
+                    Integer urgentQty = pkg.getUrgentTinsLimit() != null ? pkg.getUrgentTinsLimit() : 0;
+                    if (urgentQty > 0) {
+                        EmployerPostQuota quotaUrgent = new EmployerPostQuota();
+                        quotaUrgent.setEmployer(employer);
+                        quotaUrgent.setQuotaType("URGENT");
+                        quotaUrgent.setRemainingPosts(urgentQty);
+                        quotaUrgent.setType("MONTHLY");
+                        if (pkg.getDurationDays() != null) {
+                            quotaUrgent.setExpiresAt(LocalDateTime.now().plusDays(pkg.getDurationDays()));
+                        }
+                        employerPostQuotaRepository.save(quotaUrgent);
+                    }
+                }
+            }
 
             // Gửi email thông báo mua thành công
             sendPurchaseSuccessEmail(purchase.getEmployerId(), pkg.getName(), purchase.getPricePaid().toString());

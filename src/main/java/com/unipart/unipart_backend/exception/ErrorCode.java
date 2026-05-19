@@ -41,6 +41,7 @@ public enum ErrorCode {
     EMPLOYER_NOT_FOUND(3002, "Employer does not exist", HttpStatus.NOT_FOUND),
     PURCHASE_NOT_FOUND(3003, "Purchase record not found", HttpStatus.NOT_FOUND),
     PAYMENT_INVALID_SIGNATURE(3004, "Invalid payment signature", HttpStatus.BAD_REQUEST),
+    INSUFFICIENT_QUOTA(3005, "Bạn đã hết lượt đăng bài", HttpStatus.BAD_REQUEST),
     // Review
     JOB_NOT_FOUND(4001, "Job does not exist", HttpStatus.NOT_FOUND),
     STUDENT_NOT_FOUND(4002, "Student does not exist", HttpStatus.NOT_FOUND),
