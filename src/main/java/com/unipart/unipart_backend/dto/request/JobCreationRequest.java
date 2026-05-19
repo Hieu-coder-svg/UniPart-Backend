@@ -33,7 +33,7 @@ public class JobCreationRequest {
     @Positive(message = "Số lượng tuyển dụng phải là số dương")
     private Integer vacancies;
 
-    private Boolean urgent = false;
+    private Boolean urgent;
 
     private String address;
 

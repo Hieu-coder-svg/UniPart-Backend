@@ -37,4 +37,11 @@ public class EmployerResponse {
     private Double longitude;
     private String description;
     private Double rating;
+    
+    private String currentPackage;
+    private Integer remainingPosts;
+    private Integer remainingUrgentPosts;
+    private Integer remainingMonthlyPosts;
+    private Integer remainingMonthlyUrgentPosts;
+    private Integer monthlyMaxPostsPerDay;
 }

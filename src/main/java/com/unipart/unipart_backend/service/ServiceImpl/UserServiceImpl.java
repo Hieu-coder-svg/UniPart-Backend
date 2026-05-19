@@ -23,6 +23,10 @@ import com.unipart.unipart_backend.repository.EmployerRepository;
 import com.unipart.unipart_backend.repository.RoleRepository;
 import com.unipart.unipart_backend.repository.StudentRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.repository.EmployerPostQuotaRepository;
+import com.unipart.unipart_backend.repository.EmployerPackagePurchaseRepository;
+import com.unipart.unipart_backend.entity.EmployerPostQuota;
+import com.unipart.unipart_backend.entity.EmployerPackagePurchase;
 import com.unipart.unipart_backend.service.OtpService;
 import com.unipart.unipart_backend.service.UserService;
 import jakarta.mail.MessagingException;
@@ -59,6 +63,8 @@ public class UserServiceImpl implements UserService {
     final EmployerMapper employerMapper;
     final EmployerRepository employerRepository;
     final JavaMailSender mailSender;
+    final EmployerPostQuotaRepository employerPostQuotaRepository;
+    final EmployerPackagePurchaseRepository employerPackagePurchaseRepository;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -263,7 +269,59 @@ public class UserServiceImpl implements UserService {
     public EmployerResponse getEmployerMyInfo(){
         User user = getCurrentUser();
         var employer = employerRepository.findByUser(user);
-        return employerMapper.toEmployerResponse(employer);
+        EmployerResponse response = employerMapper.toEmployerResponse(employer);
+
+        java.util.List<EmployerPostQuota> quotas = employerPostQuotaRepository.findAllByEmployerId(employer.getId());
+        
+        int totalPosts = quotas.stream()
+                .filter(q -> "NORMAL".equals(q.getQuotaType()) && ("TIN".equals(q.getType()) || (q.getType() == null && q.getExpiresAt() == null)))
+                .mapToInt(EmployerPostQuota::getRemainingPosts)
+                .sum();
+        response.setRemainingPosts(totalPosts);
+        
+        int urgentPosts = quotas.stream()
+                .filter(q -> "URGENT".equals(q.getQuotaType()) && ("TIN".equals(q.getType()) || (q.getType() == null && q.getExpiresAt() == null)))
+                .mapToInt(EmployerPostQuota::getRemainingPosts)
+                .sum();
+        response.setRemainingUrgentPosts(urgentPosts);
+
+        int monthlyNormalPosts = quotas.stream()
+                .filter(q -> "NORMAL".equals(q.getQuotaType()) && ("MONTHLY".equals(q.getType()) || (q.getType() == null && q.getExpiresAt() != null)))
+                .mapToInt(q -> {
+                    if (q.getMaxPostsPerDay() != null) {
+                        java.time.LocalDate today = java.time.LocalDate.now();
+                        int used = (q.getLastResetDate() != null && q.getLastResetDate().equals(today) && q.getUsedPostsToday() != null) ? q.getUsedPostsToday() : 0;
+                        return Math.max(0, Math.min(q.getMaxPostsPerDay() - used, q.getRemainingPosts()));
+                    }
+                    return q.getRemainingPosts();
+                })
+                .sum();
+        response.setRemainingMonthlyPosts(monthlyNormalPosts);
+
+        int monthlyUrgentPosts = quotas.stream()
+                .filter(q -> "URGENT".equals(q.getQuotaType()) && ("MONTHLY".equals(q.getType()) || (q.getType() == null && q.getExpiresAt() != null)))
+                .mapToInt(EmployerPostQuota::getRemainingPosts)
+                .sum();
+        response.setRemainingMonthlyUrgentPosts(monthlyUrgentPosts);
+
+        response.setMonthlyMaxPostsPerDay(null); // No longer needed
+
+
+        List<EmployerPackagePurchase> purchases = employerPackagePurchaseRepository.findAllByEmployerId(employer.getId());
+        if (purchases != null && !purchases.isEmpty()) {
+            // Lấy purchase gần nhất theo ID hoặc thời gian
+            purchases.sort((a, b) -> b.getPurchasedAt().compareTo(a.getPurchasedAt()));
+            EmployerPackagePurchase latestPurchase = purchases.get(0);
+            if (latestPurchase.getSubscriptionPackage() != null) {
+                response.setCurrentPackage(latestPurchase.getSubscriptionPackage().getName());
+            } else {
+                response.setCurrentPackage("Gói Cơ bản");
+            }
+        } else {
+            response.setCurrentPackage("Gói Cơ bản");
+        }
+
+        return response;
     }
     
     @PreAuthorize("hasRole('ADMIN')")

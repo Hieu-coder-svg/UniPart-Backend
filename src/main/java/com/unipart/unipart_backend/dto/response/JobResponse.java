@@ -32,4 +32,5 @@ public class JobResponse {
     private List<JobTimeSlotResponse> timeSlots;
 private String status;
     private Long applicationId;
+    private Integer viewCount;
 }
