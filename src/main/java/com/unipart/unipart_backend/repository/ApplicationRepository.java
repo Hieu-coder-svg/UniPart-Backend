@@ -29,4 +29,12 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<Application> findAllByEmployerIdWithDetails(String employerId);
 
     List<Application> findByStudentId(String studentId);
+
+    @Query("""
+        SELECT a FROM Application a
+        JOIN FETCH a.job j
+        LEFT JOIN FETCH j.jobTimeSlots ts
+        WHERE a.status = :status
+    """)
+    List<Application> findAllByStatusWithJobAndTimeSlots(ApplicationStatus status);
 }
