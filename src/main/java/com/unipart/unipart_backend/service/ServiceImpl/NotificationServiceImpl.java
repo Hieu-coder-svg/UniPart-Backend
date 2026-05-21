@@ -10,6 +10,8 @@ import com.unipart.unipart_backend.repository.NotificationRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
 import com.unipart.unipart_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -51,12 +53,22 @@ public class NotificationServiceImpl implements NotificationService {
         );
         return response;
     }
-    public List<NotificationResponse> getMyNotifications(){
+    @Override
+    public Page<NotificationResponse> getMyNotifications(Pageable pageable){
         var context = SecurityContextHolder.getContext();
         String name = context.getAuthentication().getName();
         User u = userRepository.findByUsername(name)
                 .orElseThrow(() -> new com.unipart.unipart_backend.exception.AppException(com.unipart.unipart_backend.exception.ErrorCode.USER_NOT_EXIST));
-        List<Notification> list = notificationRepository.findByUserId(u.getId());
-        return notificationMapper.toListResponse(list);
+        Page<Notification> page = notificationRepository.findByUserIdOrderByCreatedAtDesc(u.getId(), pageable);
+        return page.map(notificationMapper::toResponse);
+    }
+
+    @Override
+    public long countUnreadNotifications(){
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        User u = userRepository.findByUsername(name)
+                .orElseThrow(() -> new com.unipart.unipart_backend.exception.AppException(com.unipart.unipart_backend.exception.ErrorCode.USER_NOT_EXIST));
+        return notificationRepository.countByUserIdAndIsReadFalse(u.getId());
     }
 }
