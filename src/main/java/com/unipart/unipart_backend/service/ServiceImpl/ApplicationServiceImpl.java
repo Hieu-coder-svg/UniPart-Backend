@@ -109,11 +109,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         // completedAt chỉ set khi COMPLETED, không phải ACCEPTED
         applicationRepository.save(app);
 
+        // Giảm vacancies đi 1
+        job.setVacancies(job.getVacancies() - 1);
+
         //Auto-close job khi đủ vacancies
-        if (acceptedCount + 1 >= job.getVacancies()) {
+        if (job.getVacancies() <= 0) {
             job.setIsHide(true);
-            jobRepository.save(job);
         }
+        jobRepository.save(job);
 
         return applicationMapper.toResponse(app);
     }
@@ -141,6 +144,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setStatus(ApplicationStatus.REJECTED);
         app.setCompletedAt(LocalDateTime.now());
         applicationRepository.save(app);
+
+        // Tăng vacancies lại 1 khi reject
+        Job job = app.getJob();
+        job.setVacancies(job.getVacancies() + 1);
+        jobRepository.save(job);
 
         return applicationMapper.toResponse(app);
     }

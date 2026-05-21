@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, String> {
+    @EntityGraph(attributePaths = {"role", "student", "employer"})
     Optional<User> findById(String id);
     Boolean existsByUsername(String username);
     Boolean existsByEmail(String email);
@@ -22,5 +23,6 @@ public interface UserRepository extends JpaRepository<User, String> {
     boolean existsByPhoneNumber(String phoneNumber);
     boolean existsByPhoneNumberAndIdNot(String phoneNumber, String id);
     long countByIsBlockedFalse();
+    long countByRole_Name(String roleName);
     java.util.List<User> findByRole_Name(String roleName);
 }

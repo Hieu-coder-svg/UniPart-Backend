@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -31,12 +33,18 @@ public class Post {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    // Keep old categoryId for backward compatibility
     @Column(name = "category_id")
     private Long categoryId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
+
+    // New: Multiple categories relationship
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<PostCategory> postCategories = new ArrayList<>();
 
     @Column(name = "related_job_id")
     private Long relatedJobId;
@@ -79,5 +87,18 @@ public class Post {
     @PreUpdate
     public void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Helper methods for managing categories
+    public void addCategory(Long categoryId) {
+        PostCategory pc = PostCategory.builder()
+                .postId(this.id)
+                .categoryId(categoryId)
+                .build();
+        this.postCategories.add(pc);
+    }
+
+    public void clearCategories() {
+        this.postCategories.clear();
     }
 }

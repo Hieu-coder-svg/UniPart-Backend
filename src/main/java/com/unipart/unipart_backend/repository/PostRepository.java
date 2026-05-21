@@ -12,6 +12,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Used by admin / internal only
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
+    // Fetch post with user eagerly loaded
+    @Query("SELECT p FROM Post p JOIN FETCH p.user WHERE p.id = :id")
+    Post findPostWithUserById(@Param("id") Long id);
+
     // Public feed – treat NULL as visible
     @Query("SELECT p FROM Post p WHERE p.isHide IS NULL OR p.isHide = false ORDER BY p.createdAt DESC")
     Page<Post> findAllVisibleOrderByCreatedAtDesc(Pageable pageable);

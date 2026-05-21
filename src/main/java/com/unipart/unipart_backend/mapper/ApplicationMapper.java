@@ -7,7 +7,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-import java.util.List;@Mapper(componentModel = "spring")
+import java.util.List;
+
+@Mapper(componentModel = "spring")
 public interface ApplicationMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -25,6 +27,7 @@ public interface ApplicationMapper {
 
     @Mapping(target = "studentId", source = "student.id")
     @Mapping(target = "studentName", source = "student.user.fullName")
+    @Mapping(target = "studentAvatar", source = "student.user.avatar")
     @Mapping(target = "studentEmail", source = "student.user.email")
     @Mapping(target = "studentPhone", source = "student.user.phoneNumber")
     @Mapping(target = "studentUniversity", source = "student.university")

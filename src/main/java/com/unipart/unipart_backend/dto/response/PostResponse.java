@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -14,9 +15,12 @@ public class PostResponse {
     Long id;
     String userId;
     String authorName;
+    String authorAvatar;
     String authorRole;
-    Long categoryId;
-    String categoryName;
+    Long categoryId; // kept for backward compatibility
+    String categoryName; // kept for backward compatibility
+    List<Long> categoryIds;
+    List<String> categoryNames;
     String content;
     String imageUrl;
     Long relatedJobId;

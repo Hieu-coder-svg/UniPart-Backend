@@ -16,4 +16,6 @@ public interface JobRepository extends JpaRepository<Job,Long>, JpaSpecification
     List<Job> findAllByEmployerId(String employerId);
 
     List<Job> findByIsHideFalseAndExpiredAtAfter(java.time.LocalDateTime now);
+
+    long countByIsHideFalseAndExpiredAtAfter(java.time.LocalDateTime now);
 }

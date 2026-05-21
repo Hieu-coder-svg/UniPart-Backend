@@ -17,6 +17,7 @@ public class ApplicationResponse {
     String jobTitle;
     String studentId;
     String studentName;
+    String studentAvatar;
     String studentEmail;
     String studentPhone;
     String studentUniversity;
