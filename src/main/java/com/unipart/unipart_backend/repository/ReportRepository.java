@@ -22,4 +22,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     boolean existsByReporterIdAndTargetTypeAndTargetId(
             String reporterId, ReportTargetType targetType, String targetId);
+
+    long countByStatus(ReportStatus status);
 }

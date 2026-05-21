@@ -64,8 +64,10 @@ public class CommunityWebSocketController {
                 .postId(saved.getId())
                 .authorId(saved.getUserId())
                 .authorName(saved.getAuthorName())
+                .authorAvatar(saved.getAuthorAvatar())
                 .authorRole(saved.getAuthorRole())
                 .categoryName(saved.getCategoryName())
+                .categoryNames(saved.getCategoryNames())
                 .contentPreview(truncate(saved.getContent(), 100))
                 .createdAt(saved.getCreatedAt())
                 .build();
@@ -99,6 +101,7 @@ public class CommunityWebSocketController {
                 .commentId(saved.getId())
                 .authorId(saved.getUserId())
                 .authorName(saved.getAuthorName())
+                .authorAvatar(saved.getAuthorAvatar())
                 .content(saved.getContent())
                 .parentCommentId(saved.getParentCommentId())
                 .createdAt(saved.getCreatedAt())

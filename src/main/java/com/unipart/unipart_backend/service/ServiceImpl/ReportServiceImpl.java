@@ -15,6 +15,7 @@ import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.repository.ReportRepository;
 import com.unipart.unipart_backend.repository.ReviewRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.EmailService;
 import com.unipart.unipart_backend.service.NotificationService;
 import com.unipart.unipart_backend.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReviewRepository reviewRepository;
     private final ReportMapper reportMapper;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     // ===== Helper =====
 
@@ -196,20 +198,49 @@ public class ReportServiceImpl implements ReportService {
 
         // Gửi notification sau khi giải quyết
         if (request.getStatus() == ReportStatus.RESOLVED || request.getStatus() == ReportStatus.REJECTED) {
-            String statusLabel = request.getStatus() == ReportStatus.RESOLVED ? "Đã giải quyết" : "Bị từ chối";
-
             // → Người báo cáo
+            String statusLabel = request.getStatus() == ReportStatus.RESOLVED ? "Đã giải quyết" : "Bị từ chối";
+            StringBuilder reporterMessage = new StringBuilder();
+            reporterMessage.append("Báo cáo #").append(reportId).append(" của bạn có trạng thái: ").append(statusLabel);
+
+            // Thêm ghi chú của admin nếu có
+            if (request.getAdminNote() != null && !request.getAdminNote().isBlank()) {
+                reporterMessage.append("\n📝 Ghi chú từ Quản trị viên: ").append(request.getAdminNote());
+            }
+
+            // Thêm thông tin thêm cho từng trường hợp
+            if (request.getStatus() == ReportStatus.RESOLVED) {
+                reporterMessage.append("\n\nCảm ơn bạn đã phản hồi. Chúng tôi đã xử lý nội dung vi phạm.");
+            } else if (request.getStatus() == ReportStatus.REJECTED) {
+                reporterMessage.append("\n\nNếu bạn không đồng ý với quyết định này, vui lòng liên hệ bộ phận hỗ trợ.");
+            }
+
             sendNotification(report.getReporterId(),
                     "Báo cáo của bạn đã được xử lý",
-                    "Báo cáo #" + reportId + " của bạn có trạng thái: " + statusLabel
-                            + (request.getAdminNote() != null && !request.getAdminNote().isBlank()
-                            ? ". Ghi chú: " + request.getAdminNote() : ""));
+                    reporterMessage.toString());
+
+            // → Gửi email cho người báo cáo khi bị từ chối
+            if (request.getStatus() == ReportStatus.REJECTED) {
+                User reporter = userRepository.findById(report.getReporterId()).orElse(null);
+                if (reporter != null && reporter.getEmail() != null) {
+                    emailService.sendReportRejectedEmail(
+                            reporter.getEmail(),
+                            reporter.getFullName(),
+                            reportId,
+                            report.getTargetType().name(),
+                            request.getAdminNote()
+                    );
+                }
+            }
 
             // → Người bị báo cáo (chỉ khi targetType là USER)
             if (report.getTargetType() == ReportTargetType.USER) {
+                String targetMessage = request.getStatus() == ReportStatus.RESOLVED
+                        ? "Tài khoản của bạn đã bị báo cáo vi phạm. Quản trị viên đã xử lý và áp dụng biện pháp cần thiết."
+                        : "Tài khoản của bạn đã bị báo cáo vi phạm. Quản trị viên đã xem xét và kết luận báo cáo không hợp lệ.";
                 sendNotification(report.getTargetId(),
-                        "Thông báo từ quản trị viên",
-                        "Tài khoản của bạn đã bị báo cáo. Báo cáo đã được xử lý với trạng thái: " + statusLabel);
+                        "Thông báo từ Quản trị viên",
+                        targetMessage);
             }
         }
 

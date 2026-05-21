@@ -16,6 +16,7 @@ public class CommentResponse {
     Long postId;
     String userId;
     String authorName;
+    String authorAvatar;
     String content;
     String imageUrl;
     Long parentCommentId;

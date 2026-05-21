@@ -1,22 +1,30 @@
 package com.unipart.unipart_backend.service.ServiceImpl;
 
+import com.unipart.unipart_backend.dto.request.NotificationCreationRequest;
 import com.unipart.unipart_backend.dto.request.PostCreationRequest;
 import com.unipart.unipart_backend.dto.request.PostUpdateRequest;
 import com.unipart.unipart_backend.dto.response.PostResponse;
+import com.unipart.unipart_backend.entity.Category;
 import com.unipart.unipart_backend.entity.Post;
+import com.unipart.unipart_backend.entity.PostCategory;
 import com.unipart.unipart_backend.entity.PostLike;
+import com.unipart.unipart_backend.entity.User;
 import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.repository.CategoryRepository;
+import com.unipart.unipart_backend.repository.PostCategoryRepository;
 import com.unipart.unipart_backend.repository.PostLikeRepository;
 import com.unipart.unipart_backend.repository.PostRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.NotificationService;
 import com.unipart.unipart_backend.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -28,8 +36,10 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostCategoryRepository postCategoryRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // ===== Helper =====
 
@@ -43,19 +53,42 @@ public class PostServiceImpl implements PostService {
 
     private PostResponse toDTO(Post p, String currentUserId) {
         String categoryName = p.getCategory() != null ? p.getCategory().getCategoryName() : null;
-        String authorName = p.getUser() != null ? p.getUser().getFullName() : null;
-        String authorRole = (p.getUser() != null && p.getUser().getRole() != null)
-                ? p.getUser().getRole().getName() : null;
+        String authorName = p.getUser() != null ? p.getUser().getFullName() : p.getUserId();
+        String authorAvatar = p.getUser() != null ? p.getUser().getAvatar() : null;
+        String authorRole = null;
+        try {
+            if (p.getUser() != null && p.getUser().getRole() != null) {
+                authorRole = p.getUser().getRole().getName();
+            }
+        } catch (Exception e) {
+            // Role might not be loaded, ignore
+        }
         boolean liked = currentUserId != null
                 && postLikeRepository.existsByPostIdAndUserId(p.getId(), currentUserId);
+
+        // Get all categories for this post
+        List<PostCategory> postCats = postCategoryRepository.findByPostId(p.getId());
+        List<Long> categoryIds = postCats.stream()
+                .map(PostCategory::getCategoryId)
+                .collect(Collectors.toList());
+        List<String> categoryNames = postCats.stream()
+                .map(pc -> {
+                    Category cat = categoryRepository.findById(pc.getCategoryId()).orElse(null);
+                    return cat != null ? cat.getCategoryName() : null;
+                })
+                .filter(name -> name != null)
+                .collect(Collectors.toList());
 
         return PostResponse.builder()
                 .id(p.getId())
                 .userId(p.getUserId())
                 .authorName(authorName)
+                .authorAvatar(authorAvatar)
                 .authorRole(authorRole)
-                .categoryId(p.getCategoryId())
-                .categoryName(categoryName)
+                .categoryId(p.getCategoryId()) // backward compatibility
+                .categoryName(categoryName) // backward compatibility
+                .categoryIds(categoryIds)
+                .categoryNames(categoryNames)
                 .content(p.getContent())
                 .imageUrl(p.getImageUrl())
                 .relatedJobId(p.getRelatedJobId())
@@ -74,19 +107,43 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostResponse create(PostCreationRequest request, String userId) {
-        if (!categoryRepository.existsById(request.getCategoryId())) {
+        // Validate categories exist
+        if (request.getCategoryIds() == null || request.getCategoryIds().isEmpty()) {
             throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
         }
+        for (Long categoryId : request.getCategoryIds()) {
+            if (!categoryRepository.existsById(categoryId)) {
+                throw new AppException(ErrorCode.CATEGORY_NOT_FOUND);
+            }
+        }
+
+        // Set primary categoryId for backward compatibility
+        Long primaryCategoryId = request.getCategoryIds().get(0);
+
         Post post = Post.builder()
                 .userId(userId)
-                .categoryId(request.getCategoryId())
+                .categoryId(primaryCategoryId)
                 .content(request.getContent())
                 .imageUrl(request.getImageUrl())
                 .relatedJobId(request.getRelatedJobId())
                 .build();
         Post saved = postRepository.save(post);
-        // reload để lấy lazy relations
-        return toDTO(postRepository.findById(saved.getId()).orElse(saved), userId);
+
+        // Fetch user and set it manually to ensure it's loaded
+        User user = userRepository.findById(userId).orElse(null);
+        saved.setUser(user);
+
+        // Save post categories
+        for (Long categoryId : request.getCategoryIds()) {
+            PostCategory postCategory = PostCategory.builder()
+                    .postId(saved.getId())
+                    .categoryId(categoryId)
+                    .build();
+            postCategoryRepository.save(postCategory);
+        }
+
+        // Return DTO with user eagerly loaded
+        return toDTO(saved, userId);
     }
 
     @Override
@@ -117,6 +174,8 @@ public class PostServiceImpl implements PostService {
         if (!isOwner && !isAdmin) {
             throw new AppException(ErrorCode.POST_FORBIDDEN);
         }
+        // Delete post categories first
+        postCategoryRepository.deleteByPostId(id);
         postRepository.deleteById(id);
     }
 
@@ -179,6 +238,19 @@ public class PostServiceImpl implements PostService {
                     .build());
             post.setLikesCount(post.getLikesCount() + 1);
             postRepository.save(post);
+
+            // Gửi thông báo cho chủ bài viết (nếu không phải tự like)
+            if (!post.getUserId().equals(userId)) {
+                User liker = userRepository.findById(userId).orElse(null);
+                String likerName = liker != null ? liker.getFullName() : "Một người dùng";
+
+                NotificationCreationRequest notificationRequest = NotificationCreationRequest.builder()
+                        .userId(post.getUserId())
+                        .title("Có người thích bài viết của bạn")
+                        .content(likerName + " đã thích bài viết của bạn")
+                        .build();
+                notificationService.createNotification(notificationRequest);
+            }
             return true;
         }
     }
