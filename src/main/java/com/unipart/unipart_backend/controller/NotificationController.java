@@ -5,14 +5,16 @@ import com.unipart.unipart_backend.dto.response.ApiResponse;
 import com.unipart.unipart_backend.dto.response.NotificationResponse;
 import com.unipart.unipart_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/notification")
@@ -21,9 +23,19 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ApiResponse<List<NotificationResponse>> getMyNotifications() {
-        return ApiResponse.<List<NotificationResponse>>builder()
-                .result(notificationService.getMyNotifications())
+    public ApiResponse<Page<NotificationResponse>> getMyNotifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ApiResponse.<Page<NotificationResponse>>builder()
+                .result(notificationService.getMyNotifications(pageable))
+                .build();
+    }
+
+    @GetMapping("/unread-count")
+    public ApiResponse<Long> getUnreadCount() {
+        return ApiResponse.<Long>builder()
+                .result(notificationService.countUnreadNotifications())
                 .build();
     }
 
