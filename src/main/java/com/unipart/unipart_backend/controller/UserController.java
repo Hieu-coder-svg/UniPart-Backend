@@ -77,8 +77,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}/block")
-    ApiResponse<Void> blockUser(@PathVariable String id) {
-        userService.blockUser(id);
+    ApiResponse<Void> blockUser(@PathVariable String id, @org.springframework.web.bind.annotation.RequestParam("reason") String reason) {
+        userService.blockUser(id, reason);
         return ApiResponse.<Void>builder().build();
     }
 

@@ -65,6 +65,7 @@ public class UserServiceImpl implements UserService {
     final JavaMailSender mailSender;
     final EmployerPostQuotaRepository employerPostQuotaRepository;
     final EmployerPackagePurchaseRepository employerPackagePurchaseRepository;
+    final com.unipart.unipart_backend.service.EmailService emailService;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -87,6 +88,8 @@ public class UserServiceImpl implements UserService {
         user.setCreatedAt(LocalDateTime.now());
         user.setIsActived(false);
         user.setIsBlocked(false);
+        String name = (request.getFullName() != null && !request.getFullName().trim().isEmpty()) ? request.getFullName().trim().replace(" ", "+") : "User";
+        user.setAvatar("https://ui-avatars.com/api/?name=" + name);
         var role = roleRepository.findByName("STUDENT")
                 .orElseThrow(() -> new RuntimeException("Lỗi hệ thống: Chưa khởi tạo quyền STUDENT trong CSDL"));
         user.setRole(role);
@@ -203,6 +206,8 @@ public class UserServiceImpl implements UserService {
         user.setCreatedAt(LocalDateTime.now());
         user.setIsActived(false); // Đợi xác thực OTP
         user.setIsBlocked(false);
+        String name = (request.getFullName() != null && !request.getFullName().trim().isEmpty()) ? request.getFullName().trim().replace(" ", "+") : "Employer";
+        user.setAvatar("https://ui-avatars.com/api/?name=" + name);
 
         Role role = roleRepository.findByName("EMPLOYER")
                 .orElseThrow();
@@ -243,13 +248,19 @@ public class UserServiceImpl implements UserService {
 
     @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getAll(){
-
-        return userMapper.toUserResponseList(userRepository.findAll());
+        List<User> users = userRepository.findAll();
+        List<UserResponse> responses = userMapper.toUserResponseList(users);
+        for (int i = 0; i < users.size(); i++) {
+            responses.get(i).setReputationScore(users.get(i).getReputationScore());
+        }
+        return responses;
     }
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse findUser(String id){
         User u = userRepository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXIST));
-        return userMapper.toUserResponse(u);
+        UserResponse response = userMapper.toUserResponse(u);
+        response.setReputationScore(u.getReputationScore());
+        return response;
     }
     @PreAuthorize("hasRole('STUDENT')")
     public StudentResponse getStudentMyInfo(){
@@ -325,11 +336,15 @@ public class UserServiceImpl implements UserService {
     }
     
     @PreAuthorize("hasRole('ADMIN')")
-    public void blockUser(String id) {
+    public void blockUser(String id, String reason) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
         user.setIsBlocked(true);
         userRepository.save(user);
+
+        // Send email notification
+        String fullName = user.getFullName() != null && !user.getFullName().isBlank() ? user.getFullName() : user.getUsername();
+        emailService.sendAccountBannedEmail(user.getEmail(), fullName, reason);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -338,6 +353,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
         user.setIsBlocked(false);
         userRepository.save(user);
+
+        // Send email notification
+        String fullName = user.getFullName() != null && !user.getFullName().isBlank() ? user.getFullName() : user.getUsername();
+        emailService.sendAccountUnbannedEmail(user.getEmail(), fullName);
     }
 
     public String getEmailByUsername(String username) {

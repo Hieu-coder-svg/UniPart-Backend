@@ -23,5 +23,9 @@ public class ReviewResponse {
     ReviewType reviewType;
     Integer rating;
     String comment;
+    String studentName;
+    String studentAvatar;
+    String employerName;
+    String employerAvatar;
     LocalDateTime createdAt;
 }
