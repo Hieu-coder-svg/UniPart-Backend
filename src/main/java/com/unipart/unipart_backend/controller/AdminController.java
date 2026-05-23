@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
@@ -94,41 +95,90 @@ public class AdminController {
 
     @GetMapping("/stats/chart")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<AdminChartResponse> getChartData() {
+    public ApiResponse<AdminChartResponse> getChartData(@RequestParam(defaultValue = "month") String period) {
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter labelFmt = DateTimeFormatter.ofPattern("'Tháng' MM");
+        DateTimeFormatter labelFmt;
+        int loopCount;
+
+        if ("week".equalsIgnoreCase(period)) {
+            labelFmt = DateTimeFormatter.ofPattern("'Ngày' dd/MM");
+            loopCount = 7;
+        } else if ("10weeks".equalsIgnoreCase(period)) {
+            labelFmt = DateTimeFormatter.ofPattern("'Tuần' w");
+            loopCount = 10;
+        } else if ("year".equalsIgnoreCase(period)) {
+            labelFmt = DateTimeFormatter.ofPattern("'Năm' yyyy");
+            loopCount = 5;
+        } else {
+            labelFmt = DateTimeFormatter.ofPattern("'Tháng' MM");
+            loopCount = 6;
+        }
 
         List<AdminChartResponse.MonthlyRevenue> revenueList = new ArrayList<>();
-        for (int i = 5; i >= 0; i--) {
-            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-            BigDecimal rev = purchaseRepository.sumPricePaidByPaymentStatusSince(PaymentStatus.SUCCESS, monthStart);
+        for (int i = loopCount - 1; i >= 0; i--) {
+            LocalDateTime start, end;
+            if ("week".equalsIgnoreCase(period)) {
+                start = now.minusDays(i).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusDays(1);
+            } else if ("10weeks".equalsIgnoreCase(period)) {
+                start = now.minusWeeks(i).with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusWeeks(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                start = now.minusYears(i).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusYears(1);
+            } else {
+                start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusMonths(1);
+            }
+            
+            BigDecimal rev = purchaseRepository.sumPricePaidByPaymentStatusBetween(PaymentStatus.SUCCESS, start, end);
             if (rev == null) rev = BigDecimal.ZERO;
             revenueList.add(AdminChartResponse.MonthlyRevenue.builder()
-                    .month(monthStart.format(labelFmt))
+                    .month(start.format(labelFmt))
                     .revenue(rev)
                     .build());
         }
 
-        Map<String, Long> userCountByMonth = new LinkedHashMap<>();
-        for (int i = 5; i >= 0; i--) {
-            LocalDateTime monthStart = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
-            String key = monthStart.format(labelFmt);
-            userCountByMonth.put(key, 0L);
+        Map<String, Long> userCountByPeriod = new LinkedHashMap<>();
+        for (int i = loopCount - 1; i >= 0; i--) {
+            LocalDateTime start;
+            if ("week".equalsIgnoreCase(period)) {
+                start = now.minusDays(i).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            } else if ("10weeks".equalsIgnoreCase(period)) {
+                start = now.minusWeeks(i).with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            } else if ("year".equalsIgnoreCase(period)) {
+                start = now.minusYears(i).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            } else {
+                start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            }
+            String key = start.format(labelFmt);
+            userCountByPeriod.put(key, 0L);
         }
+        
         List<User> allUsers = userRepository.findAll();
         for (User u : allUsers) {
             if (u.getCreatedAt() != null) {
                 LocalDateTime created = u.getCreatedAt();
-                LocalDateTime cutoff = now.minusMonths(5).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+                LocalDateTime cutoff;
+                if ("week".equalsIgnoreCase(period)) {
+                    cutoff = now.minusDays(loopCount - 1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else if ("10weeks".equalsIgnoreCase(period)) {
+                    cutoff = now.minusWeeks(loopCount - 1).with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else if ("year".equalsIgnoreCase(period)) {
+                    cutoff = now.minusYears(loopCount - 1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else {
+                    cutoff = now.minusMonths(loopCount - 1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                }
+                
                 if (!created.isBefore(cutoff)) {
                     String key = created.format(labelFmt);
-                    if (userCountByMonth.containsKey(key)) {
-                        userCountByMonth.put(key, userCountByMonth.get(key) + 1);
+                    if (userCountByPeriod.containsKey(key)) {
+                        userCountByPeriod.put(key, userCountByPeriod.get(key) + 1);
                     }
                 }
             }
         }
-        List<AdminChartResponse.MonthlyUser> userList = userCountByMonth.entrySet().stream()
+        List<AdminChartResponse.MonthlyUser> userList = userCountByPeriod.entrySet().stream()
                 .map(e -> AdminChartResponse.MonthlyUser.builder()
                         .month(e.getKey())
                         .newUsers(e.getValue())

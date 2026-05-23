@@ -1,5 +1,6 @@
 package com.unipart.unipart_backend.service.ServiceImpl;
 
+import com.unipart.unipart_backend.dto.request.NotificationCreationRequest;
 import com.unipart.unipart_backend.dto.response.ApplicationResponse;
 import com.unipart.unipart_backend.entity.Application;
 import com.unipart.unipart_backend.entity.Job;
@@ -10,6 +11,8 @@ import com.unipart.unipart_backend.mapper.ApplicationMapper;
 import com.unipart.unipart_backend.repository.ApplicationRepository;
 import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.service.ApplicationService;
+import com.unipart.unipart_backend.service.EmailService;
+import com.unipart.unipart_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -26,6 +29,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final ApplicationMapper applicationMapper;
+    private final EmailService emailService;
+    private final NotificationService notificationService;
 
     // ===== Helper =====
 
@@ -118,6 +123,18 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         jobRepository.save(job);
 
+        String companyName = job.getEmployer().getCompanyName() != null ? job.getEmployer().getCompanyName() : job.getEmployer().getUser().getFullName();
+        String studentEmail = app.getStudent().getUser().getEmail();
+        String studentName = app.getStudent().getUser().getFullName();
+        
+        emailService.sendApplicationAcceptedEmail(studentEmail, studentName, job.getTitle(), companyName);
+        
+        notificationService.createNotification(NotificationCreationRequest.builder()
+                .userId(app.getStudent().getId())
+                .title("Đơn ứng tuyển được chấp nhận 🎉")
+                .content("Chúc mừng! Đơn ứng tuyển cho vị trí " + job.getTitle() + " tại " + companyName + " đã được chấp nhận. Vui lòng chờ nhà tuyển dụng liên hệ hoặc kiểm tra email của bạn.")
+                .build());
+
         return applicationMapper.toResponse(app);
     }
 
@@ -150,6 +167,18 @@ public class ApplicationServiceImpl implements ApplicationService {
         job.setVacancies(job.getVacancies() + 1);
         jobRepository.save(job);
 
+        String companyName = job.getEmployer().getCompanyName() != null ? job.getEmployer().getCompanyName() : job.getEmployer().getUser().getFullName();
+        String studentEmail = app.getStudent().getUser().getEmail();
+        String studentName = app.getStudent().getUser().getFullName();
+        
+        emailService.sendApplicationRejectedEmail(studentEmail, studentName, job.getTitle(), companyName);
+        
+        notificationService.createNotification(NotificationCreationRequest.builder()
+                .userId(app.getStudent().getId())
+                .title("Kết quả ứng tuyển 📄")
+                .content("Nhà tuyển dụng " + companyName + " đã từ chối đơn ứng tuyển của bạn cho vị trí " + job.getTitle() + ". Đừng nản lòng, hãy tiếp tục tìm kiếm cơ hội khác nhé!")
+                .build());
+
         return applicationMapper.toResponse(app);
     }
 
@@ -176,6 +205,19 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setStatus(ApplicationStatus.COMPLETED);
         app.setCompletedAt(LocalDateTime.now());
         applicationRepository.save(app);
+
+        Job job = app.getJob();
+        String companyName = job.getEmployer().getCompanyName() != null ? job.getEmployer().getCompanyName() : job.getEmployer().getUser().getFullName();
+        String studentEmail = app.getStudent().getUser().getEmail();
+        String studentName = app.getStudent().getUser().getFullName();
+        
+        emailService.sendApplicationCompletedEmail(studentEmail, studentName, job.getTitle(), companyName);
+        
+        notificationService.createNotification(NotificationCreationRequest.builder()
+                .userId(app.getStudent().getId())
+                .title("Công việc đã hoàn thành ⭐")
+                .content("Nhà tuyển dụng " + companyName + " đã xác nhận bạn hoàn thành công việc cho vị trí " + job.getTitle() + ". Hãy để lại đánh giá cho họ nhé!")
+                .build());
 
         return applicationMapper.toResponse(app);
     }

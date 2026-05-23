@@ -155,4 +155,243 @@ public class EmailServiceImpl implements EmailService {
 
         return html.toString();
     }
+    @Override
+    @Async
+    public void sendReportResolvedEmailToReporter(String toEmail, String reporterName, Long reportId, String targetType, String adminNote) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("✅ Thông báo: Báo cáo #" + reportId + " đã được giải quyết - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #10b981; color: white; padding: 20px; text-align: center;\"><h2>✅ Báo cáo đã được giải quyết</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(reporterName).append("</strong>,</p>");
+            html.append("<p>Báo cáo #<strong>").append(reportId).append("</strong> của bạn về <strong>").append(targetType).append("</strong> đã được Quản trị viên xử lý thành công.</p>");
+            if (adminNote != null && !adminNote.isEmpty()) {
+                html.append("<div style=\"background: #f0fdf4; padding: 15px; border-left: 4px solid #16a34a;\"><p><strong>Ghi chú từ QTV:</strong><br>").append(adminNote).append("</p></div>");
+            }
+            html.append("<p>Cảm ơn bạn đã góp phần xây dựng cộng đồng UniPart vững mạnh.</p></div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendReportResolvedEmailToOffender(String toEmail, String offenderName, Long reportId, String targetType, String adminNote) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("⚠️ Thông báo: Bạn có một báo cáo vi phạm cần lưu ý - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #f59e0b; color: white; padding: 20px; text-align: center;\"><h2>⚠️ Báo cáo vi phạm</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(offenderName).append("</strong>,</p>");
+            html.append("<p>Chúng tôi nhận được báo cáo về tài khoản/bài viết của bạn và đã tiến hành xem xét.</p>");
+            if (adminNote != null && !adminNote.isEmpty()) {
+                html.append("<div style=\"background: #fffbeb; padding: 15px; border-left: 4px solid #d97706;\"><p><strong>Ghi chú từ QTV:</strong><br>").append(adminNote).append("</p></div>");
+            }
+            html.append("<p>Vui lòng tuân thủ các tiêu chuẩn cộng đồng của UniPart để tránh việc tài khoản bị hạn chế.</p></div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendApplicationAcceptedEmail(String toEmail, String studentName, String jobTitle, String companyName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("🎉 Chúc mừng! Bạn đã trúng tuyển công việc " + jobTitle + " - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #3b82f6; color: white; padding: 20px; text-align: center;\"><h2>🎉 Chúc mừng bạn trúng tuyển</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(studentName).append("</strong>,</p>");
+            html.append("<p>Tin vui! Nhà tuyển dụng <strong>").append(companyName).append("</strong> đã chấp nhận đơn ứng tuyển của bạn cho vị trí <strong>").append(jobTitle).append("</strong>.</p>");
+            html.append("<p>Vui lòng kiểm tra lại thông tin công việc và chủ động liên hệ với nhà tuyển dụng để trao đổi cụ thể hơn nhé.</p></div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendApplicationRejectedEmail(String toEmail, String studentName, String jobTitle, String companyName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("Thông báo kết quả ứng tuyển - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #6b7280; color: white; padding: 20px; text-align: center;\"><h2>Thông báo kết quả ứng tuyển</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(studentName).append("</strong>,</p>");
+            html.append("<p>Cảm ơn bạn đã ứng tuyển vị trí <strong>").append(jobTitle).append("</strong> tại <strong>").append(companyName).append("</strong>.</p>");
+            html.append("<p>Rất tiếc, hồ sơ của bạn chưa phù hợp với vị trí này. Đừng nản lòng, còn rất nhiều cơ hội việc làm khác đang chờ bạn trên UniPart!</p></div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendApplicationCompletedEmail(String toEmail, String studentName, String jobTitle, String companyName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("⭐ Chúc mừng! Bạn đã hoàn thành công việc - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #3b82f6; color: white; padding: 20px; text-align: center;\"><h2>⭐ Hoàn thành công việc</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(studentName).append("</strong>,</p>");
+            html.append("<p>Tuyệt vời! Nhà tuyển dụng <strong>").append(companyName).append("</strong> đã xác nhận bạn hoàn thành công việc <strong>").append(jobTitle).append("</strong>.</p>");
+            html.append("<p>Giờ đây bạn đã có thể để lại đánh giá cho nhà tuyển dụng trên hệ thống.</p></div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendReviewReceivedEmailToEmployer(String toEmail, String employerName, String studentName, String jobTitle, int rating, String comment) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("⭐ Bạn có một đánh giá mới - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #f59e0b; color: white; padding: 20px; text-align: center;\"><h2>⭐ Đánh giá mới</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(employerName).append("</strong>,</p>");
+            html.append("<p>Ứng viên <strong>").append(studentName).append("</strong> đã để lại đánh giá cho bạn về công việc <strong>").append(jobTitle).append("</strong>.</p>");
+            html.append("<p><strong>Đánh giá:</strong> ").append(rating).append(" sao</p>");
+            if (comment != null && !comment.isEmpty()) {
+                html.append("<p><strong>Nhận xét:</strong> ").append(comment).append("</p>");
+            }
+            html.append("</div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendReviewReceivedEmailToStudent(String toEmail, String studentName, String employerName, String jobTitle, int rating, String comment) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("⭐ Bạn có một đánh giá mới - UniPart");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #f59e0b; color: white; padding: 20px; text-align: center;\"><h2>⭐ Đánh giá mới</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(studentName).append("</strong>,</p>");
+            html.append("<p>Nhà tuyển dụng <strong>").append(employerName).append("</strong> đã để lại đánh giá cho bạn về công việc <strong>").append(jobTitle).append("</strong>.</p>");
+            html.append("<p><strong>Đánh giá:</strong> ").append(rating).append(" sao</p>");
+            if (comment != null && !comment.isEmpty()) {
+                html.append("<p><strong>Nhận xét:</strong> ").append(comment).append("</p>");
+            }
+            html.append("</div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendAccountBannedEmail(String toEmail, String fullName, String reason) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("🚨 THÔNG BÁO: Tài khoản của bạn đã bị khóa");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #ef4444; color: white; padding: 20px; text-align: center;\"><h2>🚨 TÀI KHOẢN BỊ KHÓA</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(fullName).append("</strong>,</p>");
+            html.append("<p>Chúng tôi rất tiếc phải thông báo rằng tài khoản của bạn đã bị khóa.</p>");
+            html.append("<div style=\"background: #fef2f2; padding: 15px; border-left: 4px solid #ef4444;\"><p><strong>Lý do:</strong><br>").append(reason).append("</p></div>");
+            html.append("<p>Nếu bạn cho rằng quyết định này là nhầm lẫn, vui lòng liên hệ bộ phận hỗ trợ.</p></div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Async
+    public void sendAccountUnbannedEmail(String toEmail, String fullName) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(toEmail);
+            helper.setSubject("✅ THÔNG BÁO: Tài khoản của bạn đã được khôi phục");
+
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html><html lang=\"vi\"><head><meta charset=\"UTF-8\"></head><body style=\"font-family: Arial; padding: 20px;\">");
+            html.append("<div style=\"max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;\">");
+            html.append("<div style=\"background: #10b981; color: white; padding: 20px; text-align: center;\"><h2>✅ TÀI KHOẢN ĐÃ ĐƯỢC MỞ KHÓA</h2></div>");
+            html.append("<div style=\"padding: 20px;\"><p>Xin chào <strong>").append(fullName).append("</strong>,</p>");
+            html.append("<p>Tài khoản của bạn đã được khôi phục và mở khóa thành công. Bạn hiện có thể đăng nhập và sử dụng dịch vụ bình thường.</p>");
+            html.append("</div></div></body></html>");
+
+            helper.setText(html.toString(), true);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("Failed to send email: " + e.getMessage());
+        }
+    }
 }

@@ -20,9 +20,11 @@ public class UserResponse {
     private String address;
     private String phoneNumber;
     private String gender;
+    private String avatar;
     private Boolean isBlocked;
     private String roleName;
     private Integer availableHours;
+    private Integer reputationScore;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

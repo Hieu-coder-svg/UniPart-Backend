@@ -22,4 +22,7 @@ public interface EmployerPackagePurchaseRepository extends JpaRepository<Employe
 
     @Query("SELECT SUM(e.pricePaid) FROM EmployerPackagePurchase e WHERE e.paymentStatus = :status AND e.purchasedAt >= :since")
     BigDecimal sumPricePaidByPaymentStatusSince(@Param("status") PaymentStatus status, @Param("since") LocalDateTime since);
+
+    @Query("SELECT SUM(e.pricePaid) FROM EmployerPackagePurchase e WHERE e.paymentStatus = :status AND e.purchasedAt >= :start AND e.purchasedAt < :end")
+    BigDecimal sumPricePaidByPaymentStatusBetween(@Param("status") PaymentStatus status, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }

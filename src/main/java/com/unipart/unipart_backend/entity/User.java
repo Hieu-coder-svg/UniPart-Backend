@@ -33,6 +33,10 @@ import java.time.LocalDateTime;
 @Builder
 public class User {
 
+    @Builder.Default
+    @Column(name = "reputation_score")
+    private Integer reputationScore = 100;
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", length = 50, nullable = false)

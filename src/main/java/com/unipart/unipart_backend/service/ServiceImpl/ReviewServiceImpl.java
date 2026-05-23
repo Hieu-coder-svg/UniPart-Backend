@@ -12,11 +12,14 @@ import com.unipart.unipart_backend.enums.ReviewType;
 import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.ReviewMapper;
+import com.unipart.unipart_backend.dto.request.NotificationCreationRequest;
 import com.unipart.unipart_backend.repository.ApplicationRepository;
 import com.unipart.unipart_backend.repository.EmployerRepository;
 import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.repository.ReviewRepository;
 import com.unipart.unipart_backend.repository.StudentRepository;
+import com.unipart.unipart_backend.service.EmailService;
+import com.unipart.unipart_backend.service.NotificationService;
 import com.unipart.unipart_backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +39,8 @@ public class ReviewServiceImpl implements ReviewService {
     private final StudentRepository studentRepository;
     private final JobRepository jobRepository;
     private final ReviewMapper reviewMapper;
+    private final EmailService emailService;
+    private final NotificationService notificationService;
 
     // ===== Helper =====
 
@@ -88,6 +93,18 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.save(review);
         updateEmployerRating(employerId);
 
+        String employerEmail = job.getEmployer().getUser().getEmail();
+        String employerName = job.getEmployer().getCompanyName() != null ? job.getEmployer().getCompanyName() : job.getEmployer().getUser().getFullName();
+        String studentName = app.getStudent().getUser().getFullName();
+
+        emailService.sendReviewReceivedEmailToEmployer(employerEmail, employerName, studentName, job.getTitle(), req.getRating(), req.getComment());
+        
+        notificationService.createNotification(NotificationCreationRequest.builder()
+                .userId(employerId)
+                .title("Đánh giá mới từ ứng viên ⭐")
+                .content("Ứng viên " + studentName + " đã để lại đánh giá " + req.getRating() + " sao cho bạn ở công việc " + job.getTitle() + ".")
+                .build());
+
         return reviewMapper.toResponse(review);
     }
 
@@ -128,6 +145,18 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.save(review);
         updateStudentRating(req.getStudentId());
+
+        String studentEmail = app.getStudent().getUser().getEmail();
+        String studentName = app.getStudent().getUser().getFullName();
+        String employerName = job.getEmployer().getCompanyName() != null ? job.getEmployer().getCompanyName() : job.getEmployer().getUser().getFullName();
+
+        emailService.sendReviewReceivedEmailToStudent(studentEmail, studentName, employerName, job.getTitle(), req.getRating(), req.getComment());
+        
+        notificationService.createNotification(NotificationCreationRequest.builder()
+                .userId(req.getStudentId())
+                .title("Đánh giá mới từ nhà tuyển dụng ⭐")
+                .content("Nhà tuyển dụng " + employerName + " đã để lại đánh giá " + req.getRating() + " sao cho bạn ở công việc " + job.getTitle() + ".")
+                .build());
 
         return reviewMapper.toResponse(review);
     }
