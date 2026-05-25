@@ -26,7 +26,7 @@ public interface UserService  {
     EmployerResponse getEmployerMyInfo();
     void forgotPassword(ForgotPasswordRequest request);
     UserResponse changePassword(ChangePasswordRequest request);
-    void blockUser(String id);
+    void blockUser(String id, String reason);
     void unblockUser(String id);
     String getEmailByUsername(String username);
 }

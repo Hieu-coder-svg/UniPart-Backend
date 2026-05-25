@@ -12,9 +12,11 @@ import com.unipart.unipart_backend.exception.AppException;
 import com.unipart.unipart_backend.exception.ErrorCode;
 import com.unipart.unipart_backend.mapper.ReportMapper;
 import com.unipart.unipart_backend.repository.JobRepository;
+import com.unipart.unipart_backend.repository.PostRepository;
 import com.unipart.unipart_backend.repository.ReportRepository;
 import com.unipart.unipart_backend.repository.ReviewRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
+import com.unipart.unipart_backend.service.EmailService;
 import com.unipart.unipart_backend.service.NotificationService;
 import com.unipart.unipart_backend.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +35,11 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final PostRepository postRepository;
     private final ReviewRepository reviewRepository;
     private final ReportMapper reportMapper;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     // ===== Helper =====
 
@@ -95,6 +99,27 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    // ===== Enrich targetName =====
+    private List<ReportResponse> enrichWithTargetNames(List<ReportResponse> responses) {
+        for (ReportResponse res : responses) {
+            if (res.getTargetType() == ReportTargetType.USER) {
+                userRepository.findById(res.getTargetId())
+                    .ifPresent(u -> res.setTargetName(u.getFullName() != null && !u.getFullName().isEmpty() ? u.getFullName() : u.getUsername()));
+            } else if (res.getTargetType() == ReportTargetType.POST) {
+                try {
+                    postRepository.findById(Long.parseLong(res.getTargetId()))
+                        .ifPresent(p -> res.setTargetName("Bài viết #" + p.getId()));
+                } catch (Exception e) {}
+            } else if (res.getTargetType() == ReportTargetType.JOB) {
+                try {
+                    jobRepository.findById(Long.parseLong(res.getTargetId()))
+                        .ifPresent(j -> res.setTargetName(j.getTitle()));
+                } catch (Exception e) {}
+            }
+        }
+        return responses;
+    }
+
     // ================= USER: Tạo report =================
     @Override
     @Transactional
@@ -151,22 +176,22 @@ public class ReportServiceImpl implements ReportService {
     public List<ReportResponse> getMyReports() {
         String userId = getCurrentUserId();
         if (userId == null) throw new AppException(ErrorCode.UNAUTHENTICATED);
-        return reportMapper.toResponseList(
-                reportRepository.findByReporterIdOrderByCreatedAtDesc(userId));
+        return enrichWithTargetNames(reportMapper.toResponseList(
+                reportRepository.findByReporterIdOrderByCreatedAtDesc(userId)));
     }
 
     // ================= ADMIN: Lấy tất cả =================
     @Override
     public List<ReportResponse> getAllReports() {
-        return reportMapper.toResponseList(
-                reportRepository.findAllByOrderByCreatedAtDesc());
+        return enrichWithTargetNames(reportMapper.toResponseList(
+                reportRepository.findAllByOrderByCreatedAtDesc()));
     }
 
     // ================= ADMIN: Lọc theo status =================
     @Override
     public List<ReportResponse> getReportsByStatus(ReportStatus status) {
-        return reportMapper.toResponseList(
-                reportRepository.findByStatusOrderByCreatedAtDesc(status));
+        return enrichWithTargetNames(reportMapper.toResponseList(
+                reportRepository.findByStatusOrderByCreatedAtDesc(status)));
     }
 
     // ================= ADMIN: Xem chi tiết =================
@@ -174,7 +199,9 @@ public class ReportServiceImpl implements ReportService {
     public ReportResponse getReportById(Long reportId) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new AppException(ErrorCode.REPORT_NOT_FOUND));
-        return reportMapper.toResponse(report);
+        ReportResponse res = reportMapper.toResponse(report);
+        enrichWithTargetNames(List.of(res));
+        return res;
     }
 
     // ================= ADMIN: Cập nhật trạng thái =================
@@ -194,22 +221,110 @@ public class ReportServiceImpl implements ReportService {
         report.setUpdatedAt(LocalDateTime.now());
         reportRepository.save(report);
 
+        // Xác định ID của đối tượng bị báo cáo (Người vi phạm)
+        String offendingUserId = null;
+        switch (report.getTargetType()) {
+            case USER -> offendingUserId = report.getTargetId();
+            case POST -> {
+                try {
+                    Long postId = Long.parseLong(report.getTargetId());
+                    offendingUserId = postRepository.findById(postId)
+                            .map(com.unipart.unipart_backend.entity.Post::getUserId)
+                            .orElse(null);
+                } catch (Exception e) {}
+            }
+            case JOB -> {
+                try {
+                    Long jobId = Long.parseLong(report.getTargetId());
+                    offendingUserId = jobRepository.findById(jobId)
+                            .map(com.unipart.unipart_backend.entity.Job::getEmployerId)
+                            .orElse(null);
+                } catch (Exception e) {}
+            }
+            default -> {}
+        }
+
+        // Trừ điểm uy tín nếu Đã giải quyết
+        if (request.getStatus() == ReportStatus.RESOLVED && offendingUserId != null) {
+            userRepository.findById(offendingUserId).ifPresent(offendingUser -> {
+                if (offendingUser.getReputationScore() == null) {
+                    offendingUser.setReputationScore(100);
+                }
+                offendingUser.setReputationScore(offendingUser.getReputationScore() - 7);
+                userRepository.save(offendingUser);
+            });
+        }
+
         // Gửi notification sau khi giải quyết
         if (request.getStatus() == ReportStatus.RESOLVED || request.getStatus() == ReportStatus.REJECTED) {
-            String statusLabel = request.getStatus() == ReportStatus.RESOLVED ? "Đã giải quyết" : "Bị từ chối";
-
             // → Người báo cáo
+            String statusLabel = request.getStatus() == ReportStatus.RESOLVED ? "Đã giải quyết" : "Bị từ chối";
+            StringBuilder reporterMessage = new StringBuilder();
+            reporterMessage.append("Báo cáo #").append(reportId).append(" của bạn có trạng thái: ").append(statusLabel);
+
+            // Thêm ghi chú của admin nếu có
+            if (request.getAdminNote() != null && !request.getAdminNote().isBlank()) {
+                reporterMessage.append("\n📝 Ghi chú từ Quản trị viên: ").append(request.getAdminNote());
+            }
+
+            // Thêm thông tin thêm cho từng trường hợp
+            if (request.getStatus() == ReportStatus.RESOLVED) {
+                reporterMessage.append("\n\nCảm ơn bạn đã phản hồi. Chúng tôi đã xử lý nội dung vi phạm và áp dụng hình thức kỷ luật đối với người dùng này.");
+            } else if (request.getStatus() == ReportStatus.REJECTED) {
+                reporterMessage.append("\n\nNếu bạn không đồng ý với quyết định này, vui lòng liên hệ bộ phận hỗ trợ.");
+            }
+
             sendNotification(report.getReporterId(),
                     "Báo cáo của bạn đã được xử lý",
-                    "Báo cáo #" + reportId + " của bạn có trạng thái: " + statusLabel
-                            + (request.getAdminNote() != null && !request.getAdminNote().isBlank()
-                            ? ". Ghi chú: " + request.getAdminNote() : ""));
+                    reporterMessage.toString());
 
-            // → Người bị báo cáo (chỉ khi targetType là USER)
-            if (report.getTargetType() == ReportTargetType.USER) {
-                sendNotification(report.getTargetId(),
-                        "Thông báo từ quản trị viên",
-                        "Tài khoản của bạn đã bị báo cáo. Báo cáo đã được xử lý với trạng thái: " + statusLabel);
+            // → Gửi email cho người báo cáo khi bị từ chối / đã giải quyết
+            if (request.getStatus() == ReportStatus.REJECTED) {
+                User reporter = userRepository.findById(report.getReporterId()).orElse(null);
+                if (reporter != null && reporter.getEmail() != null) {
+                    emailService.sendReportRejectedEmail(
+                            reporter.getEmail(),
+                            reporter.getFullName(),
+                            reportId,
+                            report.getTargetType().name(),
+                            request.getAdminNote()
+                    );
+                }
+            } else if (request.getStatus() == ReportStatus.RESOLVED) {
+                User reporter = userRepository.findById(report.getReporterId()).orElse(null);
+                if (reporter != null && reporter.getEmail() != null) {
+                    emailService.sendReportResolvedEmailToReporter(
+                            reporter.getEmail(),
+                            reporter.getFullName(),
+                            reportId,
+                            report.getTargetType().name(),
+                            request.getAdminNote()
+                    );
+                }
+            }
+
+            // → Người bị báo cáo (đối tượng vi phạm)
+            if (offendingUserId != null) {
+                String targetMessage = request.getStatus() == ReportStatus.RESOLVED
+                        ? "Nội dung hoặc tài khoản của bạn đã bị báo cáo vi phạm. Quản trị viên đã xem xét, xử lý và áp dụng biện pháp kỷ luật (trừ 7 điểm uy tín)."
+                        : "Nội dung hoặc tài khoản của bạn đã bị báo cáo vi phạm. Quản trị viên đã xem xét và kết luận báo cáo không hợp lệ.";
+                sendNotification(offendingUserId,
+                        "Thông báo từ Quản trị viên",
+                        targetMessage);
+
+                // Gửi email cho người vi phạm nếu Đã giải quyết
+                if (request.getStatus() == ReportStatus.RESOLVED) {
+                    User offender = userRepository.findById(offendingUserId).orElse(null);
+                    if (offender != null && offender.getEmail() != null) {
+                        emailService.sendReportResolvedEmailToOffender(
+                                offender.getEmail(),
+                                offender.getFullName(),
+                                reportId,
+                                report.getTargetType().name(),
+                                request.getAdminNote()
+                        );
+                    }
+                }
             }
         }
 

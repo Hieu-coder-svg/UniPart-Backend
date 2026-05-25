@@ -22,6 +22,7 @@ public class ReportResponse {
     String reporterName;
     ReportTargetType targetType;
     String targetId;
+    String targetName;
     String reason;
     String evidenceUrl;
     ReportStatus status;

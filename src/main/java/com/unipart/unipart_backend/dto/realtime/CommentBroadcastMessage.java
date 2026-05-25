@@ -13,6 +13,7 @@ public class CommentBroadcastMessage {
     Long commentId;
     String authorId;
     String authorName;
+    String authorAvatar;
     String content;
     Long parentCommentId;  // null = comment gốc
     LocalDateTime createdAt;

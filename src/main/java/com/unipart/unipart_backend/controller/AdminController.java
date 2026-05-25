@@ -1,11 +1,17 @@
 package com.unipart.unipart_backend.controller;
 
 import com.unipart.unipart_backend.dto.request.NotificationCreationRequest;
+import com.unipart.unipart_backend.dto.response.AdminChartResponse;
 import com.unipart.unipart_backend.dto.response.AdminStatsResponse;
 import com.unipart.unipart_backend.dto.response.ApiResponse;
+import com.unipart.unipart_backend.entity.User;
+import com.unipart.unipart_backend.enums.PaymentStatus;
+import com.unipart.unipart_backend.enums.ReportStatus;
 import com.unipart.unipart_backend.repository.ApplicationRepository;
+import com.unipart.unipart_backend.repository.EmployerPackagePurchaseRepository;
 import com.unipart.unipart_backend.repository.JobRepository;
 import com.unipart.unipart_backend.repository.PostRepository;
+import com.unipart.unipart_backend.repository.ReportRepository;
 import com.unipart.unipart_backend.repository.UserRepository;
 import com.unipart.unipart_backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +20,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
@@ -24,6 +40,8 @@ public class AdminController {
     @Autowired private JobRepository jobRepository;
     @Autowired private ApplicationRepository applicationRepository;
     @Autowired private PostRepository postRepository;
+    @Autowired private ReportRepository reportRepository;
+    @Autowired private EmployerPackagePurchaseRepository purchaseRepository;
     @Autowired private NotificationService notificationService;
 
     // ===== Stats =====
@@ -33,17 +51,158 @@ public class AdminController {
     public ApiResponse<AdminStatsResponse> getStats() {
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByIsBlockedFalse();
+        long totalStudents = userRepository.countByRole_Name("STUDENT");
+        long totalEmployers = userRepository.countByRole_Name("EMPLOYER");
+
         long totalJobs = jobRepository.count();
+        LocalDateTime now = LocalDateTime.now();
+        long activeJobs = jobRepository.countByIsHideFalseAndExpiredAtAfter(now);
+
         long totalRequests = applicationRepository.count();
+        long totalPosts = postRepository.count();
+
+        long totalReports = reportRepository.count();
+        long pendingReports = reportRepository.countByStatus(ReportStatus.PENDING);
+        long resolvedReports = reportRepository.countByStatus(ReportStatus.RESOLVED);
+
+        BigDecimal totalRevenue = purchaseRepository.sumPricePaidByPaymentStatus(PaymentStatus.SUCCESS);
+        if (totalRevenue == null) totalRevenue = BigDecimal.ZERO;
+
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        BigDecimal monthlyRevenue = purchaseRepository.sumPricePaidByPaymentStatusSince(PaymentStatus.SUCCESS, startOfMonth);
+        if (monthlyRevenue == null) monthlyRevenue = BigDecimal.ZERO;
 
         AdminStatsResponse stats = AdminStatsResponse.builder()
                 .totalUsers(totalUsers)
                 .activeUsers(activeUsers)
+                .totalStudents(totalStudents)
+                .totalEmployers(totalEmployers)
                 .totalJobs(totalJobs)
+                .activeJobs(activeJobs)
                 .totalRequests(totalRequests)
+                .totalPosts(totalPosts)
+                .totalReports(totalReports)
+                .pendingReports(pendingReports)
+                .resolvedReports(resolvedReports)
+                .totalRevenue(totalRevenue)
+                .monthlyRevenue(monthlyRevenue)
                 .build();
 
         return ApiResponse.<AdminStatsResponse>builder().result(stats).build();
+    }
+
+    // ===== Chart Data =====
+
+    @GetMapping("/stats/chart")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<AdminChartResponse> getChartData(@RequestParam(defaultValue = "month") String period) {
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter labelFmt;
+        int loopCount;
+
+        if ("week".equalsIgnoreCase(period)) {
+            labelFmt = DateTimeFormatter.ofPattern("'Ngày' dd/MM");
+            loopCount = 7;
+        } else if ("10weeks".equalsIgnoreCase(period)) {
+            labelFmt = DateTimeFormatter.ofPattern("'Tuần' w");
+            loopCount = 10;
+        } else if ("year".equalsIgnoreCase(period)) {
+            labelFmt = DateTimeFormatter.ofPattern("'Năm' yyyy");
+            loopCount = 5;
+        } else {
+            labelFmt = DateTimeFormatter.ofPattern("'Tháng' MM");
+            loopCount = 6;
+        }
+
+        List<AdminChartResponse.MonthlyRevenue> revenueList = new ArrayList<>();
+        for (int i = loopCount - 1; i >= 0; i--) {
+            LocalDateTime start, end;
+            if ("week".equalsIgnoreCase(period)) {
+                start = now.minusDays(i).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusDays(1);
+            } else if ("10weeks".equalsIgnoreCase(period)) {
+                start = now.minusWeeks(i).with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusWeeks(1);
+            } else if ("year".equalsIgnoreCase(period)) {
+                start = now.minusYears(i).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusYears(1);
+            } else {
+                start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                end = start.plusMonths(1);
+            }
+            
+            BigDecimal rev = purchaseRepository.sumPricePaidByPaymentStatusBetween(PaymentStatus.SUCCESS, start, end);
+            if (rev == null) rev = BigDecimal.ZERO;
+            revenueList.add(AdminChartResponse.MonthlyRevenue.builder()
+                    .month(start.format(labelFmt))
+                    .revenue(rev)
+                    .build());
+        }
+
+        Map<String, Long> userCountByPeriod = new LinkedHashMap<>();
+        for (int i = loopCount - 1; i >= 0; i--) {
+            LocalDateTime start;
+            if ("week".equalsIgnoreCase(period)) {
+                start = now.minusDays(i).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            } else if ("10weeks".equalsIgnoreCase(period)) {
+                start = now.minusWeeks(i).with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            } else if ("year".equalsIgnoreCase(period)) {
+                start = now.minusYears(i).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            } else {
+                start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+            }
+            String key = start.format(labelFmt);
+            userCountByPeriod.put(key, 0L);
+        }
+        
+        List<User> allUsers = userRepository.findAll();
+        for (User u : allUsers) {
+            if (u.getCreatedAt() != null) {
+                LocalDateTime created = u.getCreatedAt();
+                LocalDateTime cutoff;
+                if ("week".equalsIgnoreCase(period)) {
+                    cutoff = now.minusDays(loopCount - 1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else if ("10weeks".equalsIgnoreCase(period)) {
+                    cutoff = now.minusWeeks(loopCount - 1).with(java.time.DayOfWeek.MONDAY).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else if ("year".equalsIgnoreCase(period)) {
+                    cutoff = now.minusYears(loopCount - 1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                } else {
+                    cutoff = now.minusMonths(loopCount - 1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+                }
+                
+                if (!created.isBefore(cutoff)) {
+                    String key = created.format(labelFmt);
+                    if (userCountByPeriod.containsKey(key)) {
+                        userCountByPeriod.put(key, userCountByPeriod.get(key) + 1);
+                    }
+                }
+            }
+        }
+        List<AdminChartResponse.MonthlyUser> userList = userCountByPeriod.entrySet().stream()
+                .map(e -> AdminChartResponse.MonthlyUser.builder()
+                        .month(e.getKey())
+                        .newUsers(e.getValue())
+                        .build())
+                .collect(Collectors.toList());
+
+        Map<String, Long> statusCounts = new LinkedHashMap<>();
+        for (ReportStatus rs : ReportStatus.values()) {
+            statusCounts.put(rs.name(), reportRepository.countByStatus(rs));
+        }
+        List<AdminChartResponse.ReportStatusCount> reportList = statusCounts.entrySet().stream()
+                .map(e -> AdminChartResponse.ReportStatusCount.builder()
+                        .status(e.getKey())
+                        .count(e.getValue())
+                        .build())
+                .collect(Collectors.toList());
+
+        AdminChartResponse chart = AdminChartResponse.builder()
+                .monthlyRevenue(revenueList)
+                .monthlyUsers(userList)
+                .reportStatus(reportList)
+                .build();
+
+        return ApiResponse.<AdminChartResponse>builder().result(chart).build();
     }
 
     // ===== Job: hide / unhide =====
