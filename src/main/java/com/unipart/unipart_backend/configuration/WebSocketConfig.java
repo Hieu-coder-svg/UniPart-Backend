@@ -26,7 +26,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:5173", "http://localhost:*")
+                .setAllowedOriginPatterns("http://localhost:5173", "http://localhost:*", "https://unipart.vercel.app", "https://*.vercel.app")
                 .addInterceptors(webSocketAuthInterceptor)
                 .withSockJS();
     }
