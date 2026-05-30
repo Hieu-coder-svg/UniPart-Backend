@@ -33,7 +33,8 @@ public class SecurityConfig {
                     requests.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                             .requestMatchers("/ws/**").permitAll()
                             .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
-                            .requestMatchers(HttpMethod.GET, "/auth/**", "/packages", "/packages/**", "/home/payment/vnpay-return", "/payment/success").permitAll()
+                            .requestMatchers(HttpMethod.POST, "/home/payment/payos-webhook").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/auth/**", "/packages", "/packages/**", "/payment/success").permitAll()
                             .requestMatchers(HttpMethod.GET, "/reviews/employer/**", "/reviews/student/**").permitAll()
                             // Community Post — public read
                             .requestMatchers(HttpMethod.GET, "/categories", "/categories/**").permitAll()

@@ -12,14 +12,14 @@ import java.util.Map;
 public interface PurchaseService {
 
     /**
-     * Bước 1: Employer chọn gói → tạo bản ghi PENDING + trả về URL thanh toán VNPay.
+     * Bước 1: Employer chọn gói → tạo bản ghi PENDING + trả về URL thanh toán PayOS.
      */
     PaymentUrlResponse createPaymentUrl(Long packageId, String ipAddress);
 
     /**
-     * Bước 2: Nhận callback từ VNPay → verify → cập nhật trạng thái DB → trả về redirect URL.
+     * Bước 2: Nhận webhook từ PayOS → verify chữ ký → cập nhật trạng thái DB.
      */
-    String handleVNPayReturn(Map<String, String> params);
+    void handlePayOSWebhook(vn.payos.model.webhooks.Webhook webhookBody);
 
     /**
      * Lấy lịch sử mua gói của employer đang đăng nhập.

@@ -1,6 +1,5 @@
 package com.unipart.unipart_backend.service.ServiceImpl;
 
-import com.unipart.unipart_backend.configuration.VNPayConfig;
 import com.unipart.unipart_backend.dto.response.PaymentUrlResponse;
 import com.unipart.unipart_backend.dto.response.PurchasePackageResponse;
 import com.unipart.unipart_backend.entity.EmployerPackagePurchase;
@@ -16,11 +15,9 @@ import com.unipart.unipart_backend.repository.SubscriptionPackageRepository;
 import com.unipart.unipart_backend.entity.EmployerPostQuota;
 import com.unipart.unipart_backend.entity.Employer;
 import com.unipart.unipart_backend.service.PurchaseService;
-import com.unipart.unipart_backend.service.VNPayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -32,11 +29,14 @@ import com.unipart.unipart_backend.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.UnsupportedEncodingException;
 
+import vn.payos.PayOS;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.webhooks.Webhook;
+import vn.payos.model.webhooks.WebhookData;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,8 +45,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     private final SubscriptionPackageRepository subscriptionPackageRepository;
     private final EmployerPackagePurchaseRepository purchaseRepository;
-    private final VNPayService vnPayService;
-    private final VNPayConfig vnPayConfig;
+    private final PayOS payOS;
     private final PurchaseMapper purchaseMapper;
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
@@ -55,6 +54,12 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Value("${spring.mail.username}")
     private String fromEmail;
+
+    @Value("${payos.return-url}")
+    private String returnUrl;
+
+    @Value("${payos.cancel-url}")
+    private String cancelUrl;
 
     private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
@@ -70,16 +75,9 @@ public class PurchaseServiceImpl implements PurchaseService {
             if (!fkNames.isEmpty()) {
                 String fkName = fkNames.get(0);
                 
-                // Drop foreign key
                 jdbcTemplate.execute("ALTER TABLE employer_post_quota DROP FOREIGN KEY " + fkName);
-                
-                // Drop the unique index
                 jdbcTemplate.execute("ALTER TABLE employer_post_quota DROP INDEX employer_id");
-                
-                // Recreate a non-unique index so the foreign key can use it
                 jdbcTemplate.execute("ALTER TABLE employer_post_quota ADD INDEX idx_employer_id (employer_id)");
-                
-                // Re-add the foreign key
                 jdbcTemplate.execute("ALTER TABLE employer_post_quota ADD CONSTRAINT " + fkName + 
                                      " FOREIGN KEY (employer_id) REFERENCES employer(id)");
                                      
@@ -90,8 +88,6 @@ public class PurchaseServiceImpl implements PurchaseService {
         }
     }
 
-    // ===== Helper =====
-
     private String getCurrentUserId() {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
@@ -100,73 +96,94 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     // ===== CREATE PAYMENT URL =====
-
     @Override
     @Transactional
     public PaymentUrlResponse createPaymentUrl(Long packageId, String ipAddress) {
         String employerId = getCurrentUserId();
 
-        // Kiểm tra gói tồn tại
         SubscriptionPackage pkg = subscriptionPackageRepository.findById(packageId)
                 .orElseThrow(() -> new AppException(ErrorCode.PACKAGE_NOT_FOUND));
 
-        // Tạo transactionRef ngắn gọn (tối đa 15 ký tự theo giới hạn VNPay)
-        String txnRef = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
-
-        // Ghi bản ghi PENDING vào DB trước khi redirect sang VNPay
+        // Lưu bản ghi PENDING vào DB để lấy ID tự tăng
         EmployerPackagePurchase purchase = EmployerPackagePurchase.builder()
                 .employerId(employerId)
                 .packageId(packageId)
                 .purchasedAt(LocalDateTime.now())
                 .pricePaid(pkg.getPrice())
                 .paymentStatus(PaymentStatus.PENDING)
-                .transactionRef(txnRef)
                 .build();
-        purchaseRepository.save(purchase);
+        purchase = purchaseRepository.save(purchase);
 
-        // Tạo URL thanh toán VNPay
-        long amountVnd = pkg.getPrice().longValue();
-        String orderInfo = "Employer " + employerId + " mua goi " + pkg.getName();
-        String paymentUrl = vnPayService.createPaymentUrl(amountVnd, txnRef, orderInfo, ipAddress);
+        try {
+            long orderCode = purchase.getId(); // Bắt buộc ID là số nguyên cho PayOS
+            long amount = pkg.getPrice().longValue();
+            String description = "Mua goi " + pkg.getName();
+            
+            // Cắt chuỗi description nếu quá 25 ký tự (PayOS giới hạn)
+            if (description.length() > 25) {
+                description = description.substring(0, 25);
+            }
 
-        log.info("Tạo payment URL cho employer={}, package={}, txnRef={}", employerId, packageId, txnRef);
+            CreatePaymentLinkRequest request = CreatePaymentLinkRequest.builder()
+                    .orderCode(orderCode)
+                    .amount(amount)
+                    .description(description)
+                    .returnUrl(returnUrl + "?success=true&packageId=" + packageId)
+                    .cancelUrl(cancelUrl + "?cancel=true")
+                    .build();
 
-        return PaymentUrlResponse.builder()
-                .paymentUrl(paymentUrl)
-                .transactionRef(txnRef)
-                .build();
+            CreatePaymentLinkResponse data = payOS.paymentRequests().create(request);
+            
+            // Cập nhật transactionRef nếu cần (dùng orderCode)
+            purchase.setTransactionRef(String.valueOf(orderCode));
+            purchaseRepository.save(purchase);
+
+            log.info("Tạo payment URL PayOS cho employer={}, orderCode={}", employerId, orderCode);
+
+            return PaymentUrlResponse.builder()
+                    .paymentUrl(data.getCheckoutUrl())
+                    .transactionRef(String.valueOf(orderCode))
+                    .build();
+
+        } catch (Exception e) {
+            log.error("Lỗi khi tạo PayOS payment link: ", e);
+            throw new RuntimeException("Không thể tạo link thanh toán PayOS: " + e.getMessage());
+        }
     }
 
-    // ===== HANDLE VNPAY RETURN =====
-
+    // ===== HANDLE PAYOS WEBHOOK =====
     @Override
     @Transactional
-    public String handleVNPayReturn(Map<String, String> params) {
-        // 1. Verify chữ ký
-        if (!vnPayService.verifyReturnHash(params)) {
-            log.warn("VNPay callback chữ ký không hợp lệ: {}", params);
-            return vnPayConfig.getFrontendFailUrl() + "?error=invalid_signature";
-        }
+    public void handlePayOSWebhook(Webhook webhookBody) {
+        try {
+            // 1. Verify chữ ký (ném exception nếu sai)
+            WebhookData data = payOS.webhooks().verify(webhookBody);
+            
+            // 2. Tìm bản ghi theo orderCode
+            Long orderCode = data.getOrderCode();
+            EmployerPackagePurchase purchase = purchaseRepository.findById(orderCode)
+                    .orElse(null);
 
-        // 2. Tìm bản ghi theo transactionRef
-        String txnRef = params.get("vnp_TxnRef");
-        EmployerPackagePurchase purchase = purchaseRepository.findByTransactionRef(txnRef)
-                .orElseThrow(() -> new AppException(ErrorCode.PURCHASE_NOT_FOUND));
+            if (purchase == null) {
+                log.warn("PayOS Webhook gửi tới orderCode={} nhưng không tồn tại trong DB (Có thể là test webhook). Bỏ qua.", orderCode);
+                return; // Bỏ qua để Controller trả về 200 OK
+            }
+            // 3. IDEMPOTENCY: Nếu đã SUCCESS rồi thì bỏ qua
+            if (purchase.getPaymentStatus() == PaymentStatus.SUCCESS) {
+                log.info("Webhook lặp lại hoặc đã xử lý cho orderCode={}, bỏ qua.", orderCode);
+                return;
+            }
 
-        String responseCode = params.get("vnp_ResponseCode");
-
-        if ("00".equals(responseCode)) {
-            // Thanh toán thành công
+            // Giao dịch thành công
             SubscriptionPackage pkg = purchase.getSubscriptionPackage();
 
-            // Tính endDate nếu là gói MONTHLY có durationDays
+            // Tính endDate
             LocalDateTime startDate = LocalDateTime.now();
             LocalDateTime endDate = null;
             if (pkg != null && pkg.getDurationDays() != null) {
                 endDate = startDate.plusDays(pkg.getDurationDays());
             }
 
-            // Số TIN nếu là gói TIN
             Integer tinsPurchased = null;
             if (pkg != null && "TIN".equalsIgnoreCase(pkg.getPackageType())) {
                 tinsPurchased = pkg.getTinQuantity();
@@ -178,7 +195,7 @@ public class PurchaseServiceImpl implements PurchaseService {
             purchase.setTinsPurchased(tinsPurchased);
             purchaseRepository.save(purchase);
 
-            log.info("Thanh toán thành công txnRef={}", txnRef);
+            log.info("PayOS thanh toán thành công orderCode={}", orderCode);
 
             // Cập nhật EmployerPostQuota
             Employer employer = employerRepository.findById(purchase.getEmployerId())
@@ -236,22 +253,12 @@ public class PurchaseServiceImpl implements PurchaseService {
                 }
             }
 
-            // Gửi email thông báo mua thành công
+            // Gửi email
             sendPurchaseSuccessEmail(purchase.getEmployerId(), pkg.getName(), purchase.getPricePaid().toString());
 
-            return vnPayConfig.getFrontendSuccessUrl()
-                    + "?success=true"
-                    + "&txnRef=" + txnRef
-                    + "&packageId=" + purchase.getPackageId();
-        } else {
-            // Thanh toán thất bại
-            purchase.setPaymentStatus(PaymentStatus.FAILED);
-            purchaseRepository.save(purchase);
-
-            log.info("Thanh toán thất bại txnRef={}, responseCode={}", txnRef, responseCode);
-            return vnPayConfig.getFrontendFailUrl()
-                    + "?txnRef=" + txnRef
-                    + "&code=" + responseCode;
+        } catch (Exception e) {
+            log.error("Lỗi xác thực hoặc xử lý Webhook PayOS: ", e);
+            throw new RuntimeException("Webhook processing failed");
         }
     }
 
@@ -297,7 +304,6 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     // ===== GET MY PURCHASES =====
-
     @Override
     public List<PurchasePackageResponse> getMyPurchases() {
         String employerId = getCurrentUserId();

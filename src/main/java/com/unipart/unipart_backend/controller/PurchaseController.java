@@ -41,17 +41,16 @@ public class PurchaseController {
     }
 
     /**
-     * VNPay gọi callback sau khi user thanh toán xong.
-     * GET /home/payment/vnpay-return
-     * (Public — không cần JWT vì VNPay gọi thẳng)
+     * PayOS gọi webhook sau khi user thanh toán thành công.
+     * POST /home/payment/payos-webhook
+     * (Public — không cần JWT vì PayOS gọi thẳng)
      */
-    @GetMapping("/home/payment/vnpay-return")
-    public void vnpayReturn(
-            @RequestParam Map<String, String> params,
-            HttpServletResponse response) throws IOException {
-
-        String redirectUrl = purchaseService.handleVNPayReturn(params);
-        response.sendRedirect(redirectUrl);
+    @PostMapping("/home/payment/payos-webhook")
+    public ApiResponse<String> payosWebhook(@org.springframework.web.bind.annotation.RequestBody vn.payos.model.webhooks.Webhook webhookBody) {
+        purchaseService.handlePayOSWebhook(webhookBody);
+        return ApiResponse.<String>builder()
+                .result("success")
+                .build();
     }
 
     /**
