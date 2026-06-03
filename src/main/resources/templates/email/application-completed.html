@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoàn thành công việc</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">⭐ Hoàn thành công việc</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">UniPart - Nền tảng kết nối việc làm Part-time</p>
+        </div>
+        <!-- Content -->
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; color: #333333; margin: 0 0 20px 0;">Xin chào <strong th:text="${studentName}">Sinh viên</strong>,</p>
+            <p style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 20px 0;">
+                Tuyệt vời! Nhà tuyển dụng <strong style="color: #1d4ed8;" th:text="${companyName}">Công ty A</strong> đã xác nhận bạn <strong>hoàn thành</strong> công việc:
+            </p>
+            
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <p style="margin: 0; font-size: 15px; color: #1e3a8a; font-weight: 600;" th:text="${jobTitle}">
+                    Nhân viên bán hàng Part-time
+                </p>
+            </div>
+
+            <p style="font-size: 14px; color: #555555; margin: 0 0 20px 0; line-height: 1.6;">
+                Giờ đây, bạn đã có thể để lại đánh giá cho nhà tuyển dụng trên hệ thống. Những đánh giá chân thực của bạn sẽ giúp ích rất nhiều cho các bạn sinh viên khác!
+            </p>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="#" style="display: inline-block; background-color: #3b82f6; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 15px;">Đánh giá nhà tuyển dụng</a>
+            </div>
+
+            <div style="text-align: center; padding: 20px; margin-top: 20px;">
+                <p style="font-size: 12px; color: #999999; margin: 0;">Email tự động, vui lòng không trả lời.</p>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2026 UniPart. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>
