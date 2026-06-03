@@ -38,7 +38,6 @@ public class Application {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "student_id", insertable = false, updatable = false)
     private Student student;
-
     @Column(name = "job_id", nullable = false)
     private Long jobId;
 
