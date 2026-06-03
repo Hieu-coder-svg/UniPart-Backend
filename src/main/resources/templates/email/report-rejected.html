@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo báo cáo bị từ chối</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">
+                ⚠️ Báo cáo của bạn đã bị từ chối
+            </h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">
+                UniPart - Nền tảng kết nối việc làm Part-time
+            </p>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; color: #333333; margin: 0 0 20px 0;">
+                Xin chào <strong th:text="${reporterName}">Người dùng</strong>,
+            </p>
+
+            <p style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 20px 0;">
+                Chúng tôi xin thông báo rằng báo cáo vi phạm #<strong th:text="${reportId}">123</strong> 
+                của bạn về đối tượng <strong th:text="${targetType}">Bài viết</strong> đã được Quản trị viên xem xét và <span style="color: #ef4444; font-weight: 600;">bị từ chối</span>.
+            </p>
+
+            <!-- Report details card -->
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <h3 style="color: #dc2626; margin: 0 0 15px 0; font-size: 16px;">📋 Chi tiết báo cáo</h3>
+                <table style="width: 100%; font-size: 14px;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #666666;">Mã báo cáo:</td>
+                        <td style="padding: 8px 0; color: #333333; font-weight: 600;">#<span th:text="${reportId}">123</span></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666666;">Đối tượng báo cáo:</td>
+                        <td style="padding: 8px 0; color: #333333; font-weight: 600;" th:text="${targetType}">Bài viết</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666666;">Trạng thái:</td>
+                        <td style="padding: 8px 0;">
+                            <span style="background: #d1d5db; color: #374151; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                BỊ TỪ CHỐI
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Admin note section -->
+            <div th:if="${adminNote != null && !adminNote.trim().isEmpty()}" style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <h3 style="color: #b45309; margin: 0 0 10px 0; font-size: 16px;">📝 Ghi chú từ Quản trị viên</h3>
+                <p style="font-size: 15px; color: #78350f; margin: 0; line-height: 1.6; font-style: italic;">
+                    "<span th:text="${adminNote}">Lý do từ chối...</span>"
+                </p>
+            </div>
+
+            <div style="background: #f3f4f6; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <p style="font-size: 14px; color: #555555; margin: 0; line-height: 1.6;">
+                    Quyết định này được đưa ra sau khi Quản trị viên xem xét kỹ lưỡng nội dung báo cáo và các bằng chứng liên quan. 
+                    Nếu bạn không đồng ý với quyết định này hoặc có thông tin bổ sung, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.
+                </p>
+            </div>
+
+            <div style="text-align: center; padding: 20px;">
+                <p style="font-size: 14px; color: #666666; margin: 0;">Cảm ơn bạn đã đồng hành cùng UniPart!</p>
+                <p style="font-size: 12px; color: #999999; margin: 10px 0 0 0;">Email này được gửi tự động từ hệ thống UniPart. Vui lòng không trả lời email này.</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2026 UniPart. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>
