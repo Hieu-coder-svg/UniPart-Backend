@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo đã được giải quyết</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">✅ Báo cáo đã được giải quyết</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">UniPart - Nền tảng kết nối việc làm Part-time</p>
+        </div>
+        <!-- Content -->
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; color: #333333; margin: 0 0 20px 0;">Xin chào <strong th:text="${reporterName}">Người dùng</strong>,</p>
+            <p style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 20px 0;">
+                Chúng tôi xin thông báo rằng báo cáo vi phạm #<strong th:text="${reportId}">123</strong> của bạn về đối tượng <strong th:text="${targetType}">Bài viết</strong> đã được Quản trị viên xử lý thành công.
+            </p>
+            
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <h3 style="color: #16a34a; margin: 0 0 15px 0; font-size: 16px;">📋 Trạng thái</h3>
+                <p style="margin: 0; font-size: 14px; color: #166534;">
+                    <strong>ĐÃ GIẢI QUYẾT:</strong> Các biện pháp xử lý cần thiết đã được áp dụng đối với vi phạm này.
+                </p>
+            </div>
+
+            <div th:if="${adminNote != null && !adminNote.trim().isEmpty()}" style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <h3 style="color: #b45309; margin: 0 0 10px 0; font-size: 16px;">📝 Ghi chú từ Quản trị viên</h3>
+                <p style="font-size: 15px; color: #78350f; margin: 0; line-height: 1.6; font-style: italic;">
+                    "<span th:text="${adminNote}">Ghi chú...</span>"
+                </p>
+            </div>
+
+            <div style="text-align: center; padding: 20px;">
+                <p style="font-size: 14px; color: #666666; margin: 0;">Cảm ơn bạn đã góp phần xây dựng cộng đồng UniPart vững mạnh!</p>
+                <p style="font-size: 12px; color: #999999; margin: 10px 0 0 0;">Email tự động, vui lòng không trả lời.</p>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2026 UniPart. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>

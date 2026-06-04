@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài khoản bị khóa</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">🚨 TÀI KHOẢN BỊ KHÓA</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">UniPart - Nền tảng kết nối việc làm Part-time</p>
+        </div>
+        <!-- Content -->
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; color: #333333; margin: 0 0 20px 0;">Xin chào <strong th:text="${fullName}">Người dùng</strong>,</p>
+            <p style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 20px 0;">
+                Chúng tôi rất tiếc phải thông báo rằng tài khoản của bạn trên hệ thống UniPart đã bị <strong>khóa</strong>.
+            </p>
+            
+            <div style="background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px 12px 12px 4px; padding: 20px; margin: 0 0 20px 0;">
+                <h3 style="color: #b91c1c; margin: 0 0 10px 0; font-size: 16px;">📋 Lý do khóa tài khoản:</h3>
+                <p style="font-size: 15px; color: #7f1d1d; margin: 0; line-height: 1.6; font-weight: 500;" th:text="${reason}">
+                    Vi phạm tiêu chuẩn cộng đồng nhiều lần.
+                </p>
+            </div>
+
+            <p style="font-size: 14px; color: #555555; margin: 0 0 20px 0; line-height: 1.6;">
+                Quyết định này được đưa ra dựa trên các Điều khoản Dịch vụ và Tiêu chuẩn Cộng đồng của chúng tôi nhằm bảo vệ môi trường làm việc an toàn, lành mạnh cho tất cả người dùng.
+            </p>
+
+            <div style="background: #f3f4f6; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <p style="font-size: 14px; color: #4b5563; margin: 0; line-height: 1.6;">
+                    Nếu bạn cho rằng quyết định này là nhầm lẫn hoặc cần được xem xét lại, vui lòng phản hồi email này hoặc liên hệ với bộ phận hỗ trợ khách hàng của chúng tôi để được giải quyết.
+                </p>
+            </div>
+
+            <div style="text-align: center; padding: 20px; margin-top: 20px;">
+                <p style="font-size: 12px; color: #999999; margin: 0;">Email tự động, vui lòng không trả lời.</p>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2026 UniPart. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo kết quả ứng tuyển</title>
+</head>
+<body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Thông báo kết quả ứng tuyển</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">UniPart - Nền tảng kết nối việc làm Part-time</p>
+        </div>
+        <!-- Content -->
+        <div style="padding: 30px;">
+            <p style="font-size: 16px; color: #333333; margin: 0 0 20px 0;">Xin chào <strong th:text="${studentName}">Sinh viên</strong>,</p>
+            <p style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 20px 0;">
+                Cảm ơn bạn đã quan tâm và ứng tuyển vị trí <strong th:text="${jobTitle}">Nhân viên</strong> tại <strong th:text="${companyName}">Công ty</strong>.
+            </p>
+            
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 0 0 20px 0;">
+                <p style="margin: 0; font-size: 15px; color: #4b5563; line-height: 1.6;">
+                    Rất tiếc, hồ sơ của bạn hiện tại chưa hoàn toàn phù hợp với yêu cầu của vị trí này. Nhà tuyển dụng đã quyết định không tiếp tục vòng phỏng vấn với bạn.
+                </p>
+            </div>
+
+            <p style="font-size: 14px; color: #555555; margin: 0 0 20px 0; line-height: 1.6;">
+                Đừng nản lòng nhé! Vẫn còn hàng trăm cơ hội việc làm hấp dẫn khác đang chờ bạn trên hệ thống UniPart. Hãy tiếp tục cập nhật hồ sơ và ứng tuyển vào các công việc khác.
+            </p>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="#" style="display: inline-block; background-color: #4b5563; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 15px;">Tìm việc làm mới</a>
+            </div>
+
+            <div style="text-align: center; padding: 20px; margin-top: 20px;">
+                <p style="font-size: 12px; color: #999999; margin: 0;">Email tự động, vui lòng không trả lời.</p>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div style="background: #1f2937; padding: 20px; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2026 UniPart. Mọi quyền được bảo lưu.</p>
+        </div>
+    </div>
+</body>
+</html>
