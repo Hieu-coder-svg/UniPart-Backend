@@ -76,7 +76,7 @@ public class OptServiceImpl implements OtpService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(toEmail);
-            helper.setSubject(" Mã OTP xác thực tài khoản Unipart");
+            helper.setSubject(" Mã OTP xác thực tài khoản UniHire");
 
             String htmlContent = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -92,12 +92,12 @@ public class OptServiceImpl implements OtpService {
                     <p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>
                     
                     <hr style="margin: 20px 0;">
-                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>Unipart Team</strong></p>
+                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>UniHire Team</strong></p>
                 </div>
                 """.formatted(otpCode);
 
             helper.setText(htmlContent, true);
-            helper.setFrom(fromEmail, "Unipart");
+            helper.setFrom(fromEmail, "UniHire");
 
             mailSender.send(message);
 

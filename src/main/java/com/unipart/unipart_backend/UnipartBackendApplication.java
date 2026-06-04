@@ -13,13 +13,13 @@ import java.util.TimeZone;
 @EnableAsync
 public class UnipartBackendApplication {
 
-	@PostConstruct
-	public void init() {
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
-	}
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(UnipartBackendApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(UnipartBackendApplication.class, args);
+    }
 
 }
