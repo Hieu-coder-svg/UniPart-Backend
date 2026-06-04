@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(toEmail);
-            helper.setSubject("Mật khẩu mới của bạn cho tài khoản Unipart");
+            helper.setSubject("Mật khẩu mới của bạn cho tài khoản UniHire");
 
             String htmlContent = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -125,12 +125,12 @@ public class UserServiceImpl implements UserService {
                     <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
                     
                     <hr style="margin: 20px 0;">
-                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>Unipart Team</strong></p>
+                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>UniHire Team</strong></p>
                 </div>
                 """.formatted(newPassword);
 
             helper.setText(htmlContent, true);
-            helper.setFrom(fromEmail, "Unipart");   // ← Thay bằng email của bạn
+            helper.setFrom(fromEmail, "UniHire");   // ← Thay bằng email của bạn
 
             mailSender.send(message);
 
