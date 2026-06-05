@@ -46,8 +46,9 @@ public class ApplicationConfig {
                         .username("admin")
                         .email("admin@unipart.vn")
                         .fullName("Administrator")
-                        .passwordHash(passwordEncoder.encode("Admin123"))
+                        .passwordHash(passwordEncoder.encode("hieucuong"))
                         .role(adminRole)
+                        .avatar("")
                         .isActived(true)
                         .isBlocked(false)
                         .build();
@@ -60,6 +61,7 @@ public class ApplicationConfig {
                         .passwordHash(passwordEncoder.encode("Student123"))
                         .role(studentRole)
                         .fullName("student")
+                        .avatar("")
                         .isActived(true)
                         .isBlocked(false)
                         .build();
@@ -82,6 +84,7 @@ public class ApplicationConfig {
                          .passwordHash(passwordEncoder.encode("Employer123"))
                          .role(employerRole)
                          .fullName("employer")
+                         .avatar("")
                          .isActived(true)
                          .isBlocked(false)
                          .build();
