@@ -11,11 +11,13 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Run stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
-# Cài mysql-client để có mysqldump phục vụ chức năng backup
-RUN apk add --no-cache mysql-client
+# Cài mysql-client chuẩn (của MySQL 8, không phải MariaDB) để hỗ trợ caching_sha2_password
+RUN apt-get update && \
+    apt-get install -y mysql-client && \
+    rm -rf /var/lib/apt/lists/*
 
 # Tạo thư mục lưu file backup
 RUN mkdir -p /app/backups
