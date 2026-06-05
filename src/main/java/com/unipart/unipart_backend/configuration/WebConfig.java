@@ -9,7 +9,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://unipart.vercel.app" ) // URL Vercel của bạn
+                .allowedOrigins("https://unipart.vercel.app", "http://localhost:5173", "https://unihire.online", "http://unihire.online") // URL Vercel của bạn
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
