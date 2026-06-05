@@ -103,61 +103,21 @@ public class UserServiceImpl implements UserService {
         return studentMapper.toStudentResponse(student);
     }
 
-    private void sendNewPasswordEmail(String toEmail, String newPassword) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject("Mật khẩu mới của bạn cho tài khoản UniHire");
-
-            String htmlContent = """
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #2c3e50;">Dặt lại mật khẩu tài khoản UniHire</h2>
-                    <p>Xin chào,</p>
-                    <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Mật khẩu mới của bạn là:</p>
-                    
-                    <div style="text-align: center; margin: 30px 0;">
-                        <h1 style="color: #e74c3c; font-size: 48px; letter-spacing: 10px; font-weight: bold;">%s</h1>
-                    </div>
-                    
-                    <p>Vui lòng đăng nhập bằng mật khẩu này và thay đổi mật khẩu ngay lập tức để bảo mật tài khoản.</p>
-                    <p>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.</p>
-                    
-                    <hr style="margin: 20px 0;">
-                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>UniHire Team</strong></p>
-                </div>
-                """.formatted(newPassword);
-
-            helper.setText(htmlContent, true);
-            helper.setFrom(fromEmail, "UniHire");   // ← Thành email của bạn
-
-            mailSender.send(message);
-
-        } catch (MessagingException e) {
-            throw new RuntimeException("Không thể gửi email mật khẩu mới: " + e.getMessage(), e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    private String generateRandomPassword(int length) {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
-    }
     public void forgotPassword(ForgotPasswordRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.EMAIL_INVALID));
-        String newRandomPassword = generateRandomPassword(8);
+        
+        otpService.generateAndSendOtp(new SendOTPRequest(request.getEmail()));
+    }
 
-        String encodedPassword = passwordEncoder.encode(newRandomPassword);
-        user.setPasswordHash(encodedPassword);
+    public void resetPassword(com.unipart.unipart_backend.dto.request.ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.EMAIL_INVALID));
+        
+        otpService.validateAndUseOtp(request.getEmail(), request.getOtp());
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        sendNewPasswordEmail(user.getEmail(), newRandomPassword);
     }
     public UserResponse changePassword(ChangePasswordRequest request) {
         String username = getCurrentUser().getUsername();

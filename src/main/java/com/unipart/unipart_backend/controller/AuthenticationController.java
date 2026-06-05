@@ -71,6 +71,13 @@ public class AuthenticationController {
                 .result("send request")
                 .build();
     }
+    @PostMapping("/resetPassword")
+    ApiResponse<String> resetPassword(@RequestBody com.unipart.unipart_backend.dto.request.ResetPasswordRequest request){
+        userService.resetPassword(request);
+        return ApiResponse.<String>builder()
+                .result("success")
+                .build();
+    }
     @PostMapping("/changePassword")
     ApiResponse<UserResponse> changePassword(@RequestBody ChangePasswordRequest request){
         return ApiResponse.<UserResponse>builder()
