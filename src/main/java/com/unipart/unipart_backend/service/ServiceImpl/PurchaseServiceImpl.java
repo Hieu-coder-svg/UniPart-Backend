@@ -274,13 +274,13 @@ public class PurchaseServiceImpl implements PurchaseService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(user.getEmail());
-            helper.setSubject("Xác nhận thanh toán thành công tại Unipart");
+            helper.setSubject("Xác nhận thanh toán thành công tại UniHire");
 
             String htmlContent = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
                     <h2 style="color: #27ae60;">Thanh toán thành công!</h2>
                     <p>Xin chào <strong>%s</strong>,</p>
-                    <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của Unipart.</p>
+                    <p>Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của UniHire.</p>
                     <p>Chúng tôi xin thông báo giao dịch mua gói dịch vụ của bạn đã được thực hiện thành công với thông tin như sau:</p>
                     <ul style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; list-style-type: none;">
                         <li><strong>Tên gói:</strong> %s</li>
@@ -289,12 +289,12 @@ public class PurchaseServiceImpl implements PurchaseService {
                     <p>Gói dịch vụ đã được kích hoạt và sẵn sàng sử dụng.</p>
                     <p>Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
                     <hr style="margin: 20px 0;">
-                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>Unipart Team</strong></p>
+                    <p style="color: #7f8c8d; font-size: 14px;">Trân trọng,<br><strong>UniHire Team</strong></p>
                 </div>
                 """.formatted(user.getFullName(), packageName, price);
 
             helper.setText(htmlContent, true);
-            helper.setFrom(fromEmail, "Unipart");
+            helper.setFrom(fromEmail, "UniHire");
 
             mailSender.send(message);
             log.info("Đã gửi email thông báo thanh toán thành công cho user {}", user.getEmail());

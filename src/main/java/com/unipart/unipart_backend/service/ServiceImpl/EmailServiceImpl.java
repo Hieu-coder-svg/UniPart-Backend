@@ -25,7 +25,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username:v4farmpixels@gmail.com}")
     private String fromEmail;
 
-    @Value("${app.mail.from-name:UniPart}")
+    @Value("${app.mail.from-name:UniHire}")
     private String fromName;
 
     private void sendHtmlEmail(String toEmail, String subject, String templateName, Context context) {
@@ -59,7 +59,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("targetType", targetType);
         context.setVariable("adminNote", adminNote);
 
-        sendHtmlEmail(toEmail, "📋 Thông báo: Báo cáo #" + reportId + " của bạn đã bị từ chối - UniPart", "report-rejected", context);
+        sendHtmlEmail(toEmail, "📋 Thông báo: Báo cáo #" + reportId + " của bạn đã bị từ chối - UniHire", "report-rejected", context);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("targetType", targetType);
         context.setVariable("adminNote", adminNote);
 
-        sendHtmlEmail(toEmail, "✅ Thông báo: Báo cáo #" + reportId + " đã được giải quyết - UniPart", "report-resolved", context);
+        sendHtmlEmail(toEmail, "✅ Thông báo: Báo cáo #" + reportId + " đã được giải quyết - UniHire", "report-resolved", context);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("offenderName", offenderName);
         context.setVariable("adminNote", adminNote);
 
-        sendHtmlEmail(toEmail, "⚠️ Thông báo: Bạn có một báo cáo vi phạm cần lưu ý - UniPart", "report-resolved-offender", context);
+        sendHtmlEmail(toEmail, "⚠️ Thông báo: Bạn có một báo cáo vi phạm cần lưu ý - UniHire", "report-resolved-offender", context);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("jobTitle", jobTitle);
         context.setVariable("companyName", companyName);
 
-        sendHtmlEmail(toEmail, "🎉 Chúc mừng! Bạn đã trúng tuyển công việc " + jobTitle + " - UniPart", "application-accepted", context);
+        sendHtmlEmail(toEmail, "🎉 Chúc mừng! Bạn đã trúng tuyển công việc " + jobTitle + " - UniHire", "application-accepted", context);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("jobTitle", jobTitle);
         context.setVariable("companyName", companyName);
 
-        sendHtmlEmail(toEmail, "Thông báo kết quả ứng tuyển - UniPart", "application-rejected", context);
+        sendHtmlEmail(toEmail, "Thông báo kết quả ứng tuyển - UniHire", "application-rejected", context);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("jobTitle", jobTitle);
         context.setVariable("companyName", companyName);
 
-        sendHtmlEmail(toEmail, "⭐ Chúc mừng! Bạn đã hoàn thành công việc - UniPart", "application-completed", context);
+        sendHtmlEmail(toEmail, "⭐ Chúc mừng! Bạn đã hoàn thành công việc - UniHire", "application-completed", context);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("rating", rating);
         context.setVariable("comment", comment);
 
-        sendHtmlEmail(toEmail, "⭐ Bạn có một đánh giá mới - UniPart", "review-received", context);
+        sendHtmlEmail(toEmail, "⭐ Bạn có một đánh giá mới - UniHire", "review-received", context);
     }
 
     @Override
@@ -142,7 +142,7 @@ public class EmailServiceImpl implements EmailService {
         context.setVariable("rating", rating);
         context.setVariable("comment", comment);
 
-        sendHtmlEmail(toEmail, "⭐ Bạn có một đánh giá mới - UniPart", "review-received", context);
+        sendHtmlEmail(toEmail, "⭐ Bạn có một đánh giá mới - UniHire", "review-received", context);
     }
 
     @Override
