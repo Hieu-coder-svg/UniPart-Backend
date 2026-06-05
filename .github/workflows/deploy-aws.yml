@@ -26,22 +26,18 @@ jobs:
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      # 4. Login vào Docker Hub (để push image)
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      # 4. Copy JAR và Dockerfile lên EC2 server
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "target/*.jar,Dockerfile"
+          target: "/home/${{ secrets.EC2_USER }}/unipart-deploy"
+          strip_components: 0
 
-      # 5. Build Docker image và push lên Docker Hub
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/unipart-backend:latest
-
-      # 6. SSH vào EC2 và pull image mới, restart container
+      # 5. SSH vào EC2 để build Docker image và chạy container
       - name: Deploy to AWS EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -49,29 +45,35 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Tạo thư mục backup nếu chưa có
+            # Tạo thư mục backup trên máy chủ
             sudo mkdir -p /var/backups/unipart
             sudo chmod 777 /var/backups/unipart
 
-            # Pull image mới nhất
-            docker pull ${{ secrets.DOCKER_USERNAME }}/unipart-backend:latest
+            # Di chuyển vào thư mục deploy
+            cd /home/${{ secrets.EC2_USER }}/unipart-deploy
+
+            # Build Docker image trực tiếp trên EC2
+            docker build -t unipart-backend:latest .
 
             # Dừng và xóa container cũ (nếu đang chạy)
             docker stop backend || true
             docker rm backend || true
 
-            # Chạy container mới với đầy đủ cấu hình
+            # Chạy container mới
             docker run -d \
               --name backend \
               --restart unless-stopped \
               -p 8080:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
-              -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
-              -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
-              -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}" \
+              -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
+              -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               -v /var/backups/unipart:/var/backups/unipart \
               -v /var/log/unipart:/var/log/unipart \
-              ${{ secrets.DOCKER_USERNAME }}/unipart-backend:latest
+              unipart-backend:latest
+
+            # Xoá file deploy để dọn dẹp không gian đĩa
+            rm -rf /home/${{ secrets.EC2_USER }}/unipart-deploy/target
 
             # Kiểm tra container đã chạy chưa
             docker ps | grep backend
