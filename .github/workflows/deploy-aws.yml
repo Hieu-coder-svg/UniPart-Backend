@@ -1,0 +1,78 @@
+name: Build and Deploy Backend to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout source code
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. Set up Java 17
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Build JAR (bỏ qua tests để nhanh hơn)
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      # 4. Login vào Docker Hub (để push image)
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 5. Build Docker image và push lên Docker Hub
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/unipart-backend:latest
+
+      # 6. SSH vào EC2 và pull image mới, restart container
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # Tạo thư mục backup nếu chưa có
+            sudo mkdir -p /var/backups/unipart
+            sudo chmod 777 /var/backups/unipart
+
+            # Pull image mới nhất
+            docker pull ${{ secrets.DOCKER_USERNAME }}/unipart-backend:latest
+
+            # Dừng và xóa container cũ (nếu đang chạy)
+            docker stop backend || true
+            docker rm backend || true
+
+            # Chạy container mới với đầy đủ cấu hình
+            docker run -d \
+              --name backend \
+              --restart unless-stopped \
+              -p 8080:8080 \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e SPRING_DATASOURCE_URL=${{ secrets.DB_URL }} \
+              -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -v /var/backups/unipart:/var/backups/unipart \
+              -v /var/log/unipart:/var/log/unipart \
+              ${{ secrets.DOCKER_USERNAME }}/unipart-backend:latest
+
+            # Kiểm tra container đã chạy chưa
+            docker ps | grep backend
+            echo "✅ Deploy backend thành công!"

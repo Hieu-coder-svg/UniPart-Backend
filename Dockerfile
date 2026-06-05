@@ -14,6 +14,12 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
+# Cài mysql-client để có mysqldump phục vụ chức năng backup
+RUN apk add --no-cache mysql-client
+
+# Tạo thư mục lưu file backup
+RUN mkdir -p /app/backups
+
 # Copy the built jar from the build stage
 COPY --from=build /app/target/*.jar app.jar
 
