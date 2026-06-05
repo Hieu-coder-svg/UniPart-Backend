@@ -63,6 +63,32 @@ public class BackupService {
         }
     }
 
+    private String getDbHost() {
+        try {
+            String cleanUrl = dbUrl.substring(dbUrl.indexOf("://") + 3);
+            String hostPort = cleanUrl.substring(0, cleanUrl.indexOf("/"));
+            if (hostPort.contains(":")) {
+                return hostPort.split(":")[0];
+            }
+            return hostPort;
+        } catch (Exception e) {
+            return "localhost";
+        }
+    }
+
+    private String getDbPort() {
+        try {
+            String cleanUrl = dbUrl.substring(dbUrl.indexOf("://") + 3);
+            String hostPort = cleanUrl.substring(0, cleanUrl.indexOf("/"));
+            if (hostPort.contains(":")) {
+                return hostPort.split(":")[1];
+            }
+            return "3306";
+        } catch (Exception e) {
+            return "3306";
+        }
+    }
+
     public BackupHistory createBackup(String type) {
         long startTime = System.currentTimeMillis();
         LocalDateTime now = LocalDateTime.now();
@@ -84,8 +110,13 @@ public class BackupService {
             }
 
             String dbName = getDbName();
+            String dbHost = getDbHost();
+            String dbPort = getDbPort();
+            
             ProcessBuilder pb = new ProcessBuilder(
                     mysqldumpPath,
+                    "-h" + dbHost,
+                    "-P" + dbPort,
                     "-u" + dbUser,
                     "--databases",
                     dbName
@@ -171,8 +202,13 @@ public class BackupService {
             }
 
             String dbName = getDbName();
+            String dbHost = getDbHost();
+            String dbPort = getDbPort();
+            
             ProcessBuilder pb = new ProcessBuilder(
                     mysqlPath,
+                    "-h" + dbHost,
+                    "-P" + dbPort,
                     "-u" + dbUser,
                     dbName
             );
