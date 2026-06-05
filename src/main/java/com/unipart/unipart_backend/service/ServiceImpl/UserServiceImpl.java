@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
 
             String htmlContent = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #2c3e50;">Đặt lại mật khẩu tài khoản Unipart</h2>
+                    <h2 style="color: #2c3e50;">Dặt lại mật khẩu tài khoản UniHire</h2>
                     <p>Xin chào,</p>
                     <p>Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Mật khẩu mới của bạn là:</p>
                     
@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
                 """.formatted(newPassword);
 
             helper.setText(htmlContent, true);
-            helper.setFrom(fromEmail, "UniHire");   // ← Thay bằng email của bạn
+            helper.setFrom(fromEmail, "UniHire");   // ← Thành email của bạn
 
             mailSender.send(message);
 

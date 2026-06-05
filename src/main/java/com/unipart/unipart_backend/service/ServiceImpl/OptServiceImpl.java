@@ -80,7 +80,7 @@ public class OptServiceImpl implements OtpService {
 
             String htmlContent = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #2c3e50;">Xác thực tài khoản Unipart</h2>
+                    <h2 style="color: #2c3e50;">Xác thực tài khoản UniHire</h2>
                     <p>Xin chào,</p>
                     <p>Bạn đang đăng ký tài khoản <strong>Người dùng mới</strong>. Mã OTP của bạn là:</p>
                     
