@@ -115,9 +115,10 @@ public class BackupService {
             
             ProcessBuilder pb = new ProcessBuilder(
                     mysqldumpPath,
-                    "-h" + dbHost,
-                    "-P" + dbPort,
-                    "-u" + dbUser,
+                    "-h", dbHost,
+                    "-P", dbPort,
+                    "-u", dbUser,
+                    "--protocol=tcp",
                     "--databases",
                     dbName
             );
@@ -207,9 +208,10 @@ public class BackupService {
             
             ProcessBuilder pb = new ProcessBuilder(
                     mysqlPath,
-                    "-h" + dbHost,
-                    "-P" + dbPort,
-                    "-u" + dbUser,
+                    "-h", dbHost,
+                    "-P", dbPort,
+                    "-u", dbUser,
+                    "--protocol=tcp",
                     dbName
             );
 
