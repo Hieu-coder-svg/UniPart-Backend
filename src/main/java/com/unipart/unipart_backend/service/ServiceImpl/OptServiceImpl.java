@@ -49,12 +49,12 @@ public class OptServiceImpl implements OtpService {
     }
 
     @Transactional
-    public void verifyOtp(VerifyOTPRequest request) {
-        Otp otp = otpRepository.findFirstByEmailAndIsUsedOrderByCreatedAtDesc(request.getEmail(), false)
+    public void validateAndUseOtp(String email, String otpString) {
+        Otp otp = otpRepository.findFirstByEmailAndIsUsedOrderByCreatedAtDesc(email, false)
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_OTP));
         Integer inputOtpCode;
         try {
-            inputOtpCode = Integer.parseInt(request.getOtp());
+            inputOtpCode = Integer.parseInt(otpString);
         } catch (NumberFormatException e) {
             throw new AppException(ErrorCode.INVALID_OTP_FORMAT);
         }
@@ -66,6 +66,11 @@ public class OptServiceImpl implements OtpService {
         }
         otp.setIsUsed(true);
         otpRepository.save(otp);
+    }
+
+    @Transactional
+    public void verifyOtp(VerifyOTPRequest request) {
+        validateAndUseOtp(request.getEmail(), request.getOtp());
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(()->new AppException(ErrorCode.EMAIL_INVALID));
         user.setIsActived(true);
         userRepository.save(user);
@@ -82,7 +87,7 @@ public class OptServiceImpl implements OtpService {
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
                     <h2 style="color: #2c3e50;">Xác thực tài khoản UniHire</h2>
                     <p>Xin chào,</p>
-                    <p>Bạn đang đăng ký tài khoản <strong>Người dùng mới</strong>. Mã OTP của bạn là:</p>
+                    <p>Mã OTP cho tài khoản của bạn là:</p>
                     
                     <div style="text-align: center; margin: 30px 0;">
                         <h1 style="color: #e74c3c; font-size: 48px; letter-spacing: 10px; font-weight: bold;">%d</h1>

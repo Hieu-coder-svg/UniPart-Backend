@@ -25,6 +25,7 @@ public interface UserService  {
     EmployerResponse updateProfileEmployer(EmployerUpdateRequest request);
     EmployerResponse getEmployerMyInfo();
     void forgotPassword(ForgotPasswordRequest request);
+    void resetPassword(com.unipart.unipart_backend.dto.request.ResetPasswordRequest request);
     UserResponse changePassword(ChangePasswordRequest request);
     void blockUser(String id, String reason);
     void unblockUser(String id);
