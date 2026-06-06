@@ -74,7 +74,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
     }
     public AuthenticationResponse authenticate(AuthenticationRequest request){
-        var user = userRepository.findByUsername(request.getUsername())
+        var user = userRepository.findByUsernameOrEmail(request.getUsername(), request.getUsername())
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXIST));
                 
         if (Boolean.TRUE.equals(user.getIsBlocked())) {
