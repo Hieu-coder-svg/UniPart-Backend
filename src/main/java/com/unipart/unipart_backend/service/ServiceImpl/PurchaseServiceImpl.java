@@ -114,6 +114,16 @@ public class PurchaseServiceImpl implements PurchaseService {
                 .build();
         purchase = purchaseRepository.save(purchase);
 
+        if (pkg.getPrice() == null || pkg.getPrice().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            grantPackageQuota(purchase, pkg);
+            log.info("Cấp phát gói miễn phí thành công cho employer={}, orderCode={}", employerId, purchase.getId());
+            
+            return PaymentUrlResponse.builder()
+                    .paymentUrl(returnUrl + "?success=true&packageId=" + packageId)
+                    .transactionRef(String.valueOf(purchase.getId()))
+                    .build();
+        }
+
         try {
             long orderCode = purchase.getId(); // Bắt buộc ID là số nguyên cho PayOS
             long amount = pkg.getPrice().longValue();
@@ -176,90 +186,94 @@ public class PurchaseServiceImpl implements PurchaseService {
 
             // Giao dịch thành công
             SubscriptionPackage pkg = purchase.getSubscriptionPackage();
-
-            // Tính endDate
-            LocalDateTime startDate = LocalDateTime.now();
-            LocalDateTime endDate = null;
-            if (pkg != null && pkg.getDurationDays() != null) {
-                endDate = startDate.plusDays(pkg.getDurationDays());
-            }
-
-            Integer tinsPurchased = null;
-            if (pkg != null && "TIN".equalsIgnoreCase(pkg.getPackageType())) {
-                tinsPurchased = pkg.getTinQuantity();
-            }
-
-            purchase.setPaymentStatus(PaymentStatus.SUCCESS);
-            purchase.setStartDate(startDate);
-            purchase.setEndDate(endDate);
-            purchase.setTinsPurchased(tinsPurchased);
-            purchaseRepository.save(purchase);
-
+            
+            grantPackageQuota(purchase, pkg);
             log.info("PayOS thanh toán thành công orderCode={}", orderCode);
-
-            // Cập nhật EmployerPostQuota
-            Employer employer = employerRepository.findById(purchase.getEmployerId())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
-
-            if (pkg != null) {
-                List<EmployerPostQuota> existingQuotas = employerPostQuotaRepository.findAllByEmployerId(employer.getId());
-
-                if ("PAY_PER_TIN".equals(pkg.getPackageType()) || "ONE_TIME".equals(pkg.getPackageType())) {
-                    String tinType = pkg.getTinType() != null ? pkg.getTinType() : "NORMAL";
-                    Integer qty = pkg.getTinQuantity() != null ? pkg.getTinQuantity() : 1;
-                    
-                    EmployerPostQuota quota = existingQuotas.stream()
-                            .filter(q -> ("TIN".equals(q.getType()) || q.getType() == null) && tinType.equals(q.getQuotaType()))
-                            .findFirst()
-                            .orElse(new EmployerPostQuota());
-
-                    if (quota.getId() == null) {
-                        quota.setEmployer(employer);
-                        quota.setQuotaType(tinType);
-                        quota.setRemainingPosts(qty);
-                        quota.setType("TIN");
-                    } else {
-                        quota.setRemainingPosts(quota.getRemainingPosts() + qty);
-                    }
-                    employerPostQuotaRepository.save(quota);
-
-                } else if ("MONTHLY".equals(pkg.getPackageType())) {
-                    Integer normalQty = pkg.getNormalTinsLimit() != null ? pkg.getNormalTinsLimit() : 0;
-                    Integer maxNormalPerDay = pkg.getMaxNormalTinsPerDay();
-                    
-                    EmployerPostQuota quotaNormal = new EmployerPostQuota();
-                    quotaNormal.setEmployer(employer);
-                    quotaNormal.setQuotaType("NORMAL");
-                    quotaNormal.setRemainingPosts(normalQty);
-                    quotaNormal.setMaxPostsPerDay(maxNormalPerDay);
-                    quotaNormal.setType("MONTHLY");
-                    if (pkg.getDurationDays() != null) {
-                        quotaNormal.setExpiresAt(LocalDateTime.now().plusDays(pkg.getDurationDays()));
-                    }
-                    employerPostQuotaRepository.save(quotaNormal);
-                    
-                    Integer urgentQty = pkg.getUrgentTinsLimit() != null ? pkg.getUrgentTinsLimit() : 0;
-                    if (urgentQty > 0) {
-                        EmployerPostQuota quotaUrgent = new EmployerPostQuota();
-                        quotaUrgent.setEmployer(employer);
-                        quotaUrgent.setQuotaType("URGENT");
-                        quotaUrgent.setRemainingPosts(urgentQty);
-                        quotaUrgent.setType("MONTHLY");
-                        if (pkg.getDurationDays() != null) {
-                            quotaUrgent.setExpiresAt(LocalDateTime.now().plusDays(pkg.getDurationDays()));
-                        }
-                        employerPostQuotaRepository.save(quotaUrgent);
-                    }
-                }
-            }
-
-            // Gửi email
-            sendPurchaseSuccessEmail(purchase.getEmployerId(), pkg.getName(), purchase.getPricePaid().toString());
 
         } catch (Exception e) {
             log.error("Lỗi xác thực hoặc xử lý Webhook PayOS: ", e);
             throw new RuntimeException("Webhook processing failed");
         }
+    }
+
+    private void grantPackageQuota(EmployerPackagePurchase purchase, SubscriptionPackage pkg) {
+        // Tính endDate
+        LocalDateTime startDate = LocalDateTime.now();
+        LocalDateTime endDate = null;
+        if (pkg != null && pkg.getDurationDays() != null) {
+            endDate = startDate.plusDays(pkg.getDurationDays());
+        }
+
+        Integer tinsPurchased = null;
+        if (pkg != null && "TIN".equalsIgnoreCase(pkg.getPackageType())) {
+            tinsPurchased = pkg.getTinQuantity();
+        }
+
+        purchase.setPaymentStatus(PaymentStatus.SUCCESS);
+        purchase.setStartDate(startDate);
+        purchase.setEndDate(endDate);
+        purchase.setTinsPurchased(tinsPurchased);
+        purchaseRepository.save(purchase);
+
+        // Cập nhật EmployerPostQuota
+        Employer employer = employerRepository.findById(purchase.getEmployerId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXIST));
+
+        if (pkg != null) {
+            List<EmployerPostQuota> existingQuotas = employerPostQuotaRepository.findAllByEmployerId(employer.getId());
+
+            if ("PAY_PER_TIN".equals(pkg.getPackageType()) || "ONE_TIME".equals(pkg.getPackageType())) {
+                String tinType = pkg.getTinType() != null ? pkg.getTinType() : "NORMAL";
+                Integer qty = pkg.getTinQuantity() != null ? pkg.getTinQuantity() : 1;
+                
+                EmployerPostQuota quota = existingQuotas.stream()
+                        .filter(q -> ("TIN".equals(q.getType()) || q.getType() == null) && tinType.equals(q.getQuotaType()))
+                        .findFirst()
+                        .orElse(new EmployerPostQuota());
+
+                if (quota.getId() == null) {
+                    quota.setEmployer(employer);
+                    quota.setQuotaType(tinType);
+                    quota.setRemainingPosts(qty);
+                    quota.setType("TIN");
+                } else {
+                    quota.setRemainingPosts(quota.getRemainingPosts() + qty);
+                }
+                employerPostQuotaRepository.save(quota);
+
+            } else if ("MONTHLY".equals(pkg.getPackageType())) {
+                Integer normalQty = pkg.getNormalTinsLimit() != null ? pkg.getNormalTinsLimit() : 0;
+                Integer maxNormalPerDay = pkg.getMaxNormalTinsPerDay();
+                
+                EmployerPostQuota quotaNormal = new EmployerPostQuota();
+                quotaNormal.setEmployer(employer);
+                quotaNormal.setQuotaType("NORMAL");
+                quotaNormal.setRemainingPosts(normalQty);
+                quotaNormal.setMaxPostsPerDay(maxNormalPerDay);
+                quotaNormal.setType("MONTHLY");
+                if (pkg.getDurationDays() != null) {
+                    quotaNormal.setExpiresAt(LocalDateTime.now().plusDays(pkg.getDurationDays()));
+                }
+                employerPostQuotaRepository.save(quotaNormal);
+                
+                Integer urgentQty = pkg.getUrgentTinsLimit() != null ? pkg.getUrgentTinsLimit() : 0;
+                if (urgentQty > 0) {
+                    EmployerPostQuota quotaUrgent = new EmployerPostQuota();
+                    quotaUrgent.setEmployer(employer);
+                    quotaUrgent.setQuotaType("URGENT");
+                    quotaUrgent.setRemainingPosts(urgentQty);
+                    quotaUrgent.setType("MONTHLY");
+                    if (pkg.getDurationDays() != null) {
+                        quotaUrgent.setExpiresAt(LocalDateTime.now().plusDays(pkg.getDurationDays()));
+                    }
+                    employerPostQuotaRepository.save(quotaUrgent);
+                }
+            }
+        }
+
+        // Gửi email
+        String priceString = purchase.getPricePaid() != null ? purchase.getPricePaid().toString() : "0";
+        sendPurchaseSuccessEmail(purchase.getEmployerId(), pkg != null ? pkg.getName() : "Gói dịch vụ", priceString);
     }
 
     private void sendPurchaseSuccessEmail(String employerId, String packageName, String price) {
