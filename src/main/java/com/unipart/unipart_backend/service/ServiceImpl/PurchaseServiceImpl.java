@@ -52,7 +52,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     private final EmployerPostQuotaRepository employerPostQuotaRepository;
     private final EmployerRepository employerRepository;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from-address:no-reply@unihire.online}")
     private String fromEmail;
 
     @Value("${payos.return-url}")

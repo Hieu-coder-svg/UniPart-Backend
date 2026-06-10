@@ -67,7 +67,7 @@ public class UserServiceImpl implements UserService {
     final EmployerPackagePurchaseRepository employerPackagePurchaseRepository;
     final com.unipart.unipart_backend.service.EmailService emailService;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from-address:no-reply@unihire.online}")
     private String fromEmail;
     private User getCurrentUser() {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
