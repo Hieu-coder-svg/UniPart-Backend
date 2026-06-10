@@ -27,7 +27,7 @@ public class OptServiceImpl implements OtpService {
     private final OtpRepository otpRepository;
     private final JavaMailSender mailSender;
    private final UserRepository userRepository;
-    @Value("${spring.mail.username}")
+    @Value("${app.mail.from-address:no-reply@unihire.online}")
     private String fromEmail;
 
     private static final int OTP_EXPIRATION_MINUTES = 5;

@@ -22,7 +22,7 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
 
-    @Value("${spring.mail.username:v4farmpixels@gmail.com}")
+    @Value("${app.mail.from-address:no-reply@unihire.online}")
     private String fromEmail;
 
     @Value("${app.mail.from-name:UniHire}")
