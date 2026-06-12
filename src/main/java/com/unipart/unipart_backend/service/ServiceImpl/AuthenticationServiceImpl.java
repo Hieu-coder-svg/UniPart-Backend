@@ -151,6 +151,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if(invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())){
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         };
+
+        String username = signedJWT.getJWTClaimsSet().getSubject();
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null || Boolean.TRUE.equals(user.getIsBlocked()) || Boolean.FALSE.equals(user.getIsActived())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
         return signedJWT;
     }
     private String generateToken(User user){
