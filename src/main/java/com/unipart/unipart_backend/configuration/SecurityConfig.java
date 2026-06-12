@@ -36,6 +36,8 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.POST, "/home/payment/payos-webhook").permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/**", "/packages", "/packages/**", "/payment/success").permitAll()
                             .requestMatchers(HttpMethod.GET, "/reviews/employer/**", "/reviews/student/**").permitAll()
+                            // Job - public read
+                            .requestMatchers(HttpMethod.GET, "/job/**", "/api/job/**").permitAll()
                             // Community Post — public read
                             .requestMatchers(HttpMethod.GET, "/categories", "/categories/**").permitAll()
                             .requestMatchers(HttpMethod.GET, "/posts", "/posts/**").permitAll()
