@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.Predicate;
 import com.unipart.unipart_backend.dto.request.JobCreationRequest;
 import com.unipart.unipart_backend.dto.request.JobUpdateRequest;
 import com.unipart.unipart_backend.dto.request.JobFilterRequest;
+import com.unipart.unipart_backend.enums.JobType;
 import com.unipart.unipart_backend.dto.response.JobResponse;
 import com.unipart.unipart_backend.entity.Employer;
 import com.unipart.unipart_backend.entity.Job;
@@ -222,6 +223,14 @@ public class JobServiceImpl implements JobService {
                 CriteriaBuilder.In<String> inClause = criteriaBuilder.in(root.get("workingShift"));
                 for (String shift : request.getWorkingShift()) {
                     inClause.value(shift);
+                }
+                predicates.add(inClause);
+            }
+
+            if (request.getJobType() != null && !request.getJobType().isEmpty()) {
+                CriteriaBuilder.In<JobType> inClause = criteriaBuilder.in(root.get("jobType"));
+                for (JobType type : request.getJobType()) {
+                    inClause.value(type);
                 }
                 predicates.add(inClause);
             }
