@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import com.unipart.unipart_backend.enums.JobType;
 
 @Entity
 @Table(name = "jobs")
@@ -59,6 +60,10 @@ public class Job {
 
     @Column(name = "working_shift", length = 100)
     private String workingShift;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "job_type", length = 100)
+    private JobType jobType;
 
     @Column(name = "vacancies", nullable = false)
     private Integer vacancies;

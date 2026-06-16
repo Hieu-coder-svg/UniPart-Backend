@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.unipart.unipart_backend.enums.JobType;
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,6 +20,7 @@ public class JobUpdateRequest {
     private String image;
     private String description;
     private String workingShift;
+    private JobType jobType;
     private Integer vacancies;
     private Boolean urgent;
     private String address;

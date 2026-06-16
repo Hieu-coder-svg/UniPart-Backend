@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.unipart.unipart_backend.enums.JobType;
 
 @Getter
 @Setter
@@ -20,6 +21,7 @@ public class JobFilterRequest {
     private String employerId;
     private String title;
     private List<String> workingShift;
+    private List<JobType> jobType;
     private Boolean urgent;
     private String address;
     private BigDecimal minSalary;

@@ -12,6 +12,7 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.unipart.unipart_backend.enums.JobType;
 
 @Getter
 @Setter
@@ -28,6 +29,8 @@ public class JobCreationRequest {
     private String description;
 
     private String workingShift;
+
+    private JobType jobType;
 
     @NotNull(message = "Số lượng tuyển dụng không được để trống")
     @Positive(message = "Số lượng tuyển dụng phải là số dương")
